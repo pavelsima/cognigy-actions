@@ -9,10 +9,16 @@ const backendUrl = process.env.BACKEND_URL !== undefined
   ? process.env.BACKEND_URL
   : 'http://localhost:3002';
 
+// Use /webchat/webchat.js for production (same-origin), GitHub for dev
+const webchatUrl = process.env.WEBCHAT_URL !== undefined
+  ? process.env.WEBCHAT_URL
+  : 'https://github.com/Cognigy/Webchat/releases/latest/download/webchat.js';
+
 const envReplace = replace({
   preventAssignment: true,
   values: {
     'process.env.BACKEND_URL': JSON.stringify(backendUrl),
+    'process.env.WEBCHAT_URL': JSON.stringify(webchatUrl),
   },
 });
 

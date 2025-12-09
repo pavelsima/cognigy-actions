@@ -10,6 +10,7 @@ import cors from 'cors';
 import Database from 'better-sqlite3';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { existsSync } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -317,6 +318,13 @@ app.get('/api/debug/all', (_req, res) => {
   }
 });
 
+// Serve webchat files (for local development)
+const webchatPath = join(__dirname, '..', 'webchat', 'dist');
+if (existsSync(webchatPath)) {
+  app.use('/webchat', express.static(webchatPath));
+  console.log(`[Backend] Serving webchat from ${webchatPath}`);
+}
+
 app.listen(PORT, () => {
   console.log(`[Backend] Conversation server running at http://localhost:${PORT}`);
   console.log(`[Backend] Endpoints:`);
@@ -327,4 +335,7 @@ app.listen(PORT, () => {
   console.log(`  DELETE /api/conversations?userId=xxx`);
   console.log(`  POST /api/debug/seed`);
   console.log(`  GET  /api/debug/all`);
+  if (existsSync(webchatPath)) {
+    console.log(`  GET  /webchat/* (static files)`);
+  }
 });

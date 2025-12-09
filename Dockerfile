@@ -16,6 +16,7 @@ COPY demo-app/package.json ./demo-app/
 COPY sdk-app/package.json ./sdk-app/
 COPY cxone-chat/package.json ./cxone-chat/
 COPY backend/package.json ./backend/
+COPY webchat/package.json ./webchat/
 
 # Install all dependencies
 RUN yarn install --frozen-lockfile
@@ -25,11 +26,15 @@ COPY demo-app/ ./demo-app/
 COPY sdk-app/ ./sdk-app/
 COPY cxone-chat/ ./cxone-chat/
 COPY backend/ ./backend/
+COPY webchat/ ./webchat/
 COPY server.production.js ./
 
 # Build all packages
-# Set production backend URL for cxone-chat build
+# Build webchat first (used by cxone-chat)
+RUN yarn build:webchat
+# Set production URLs for cxone-chat build
 ENV BACKEND_URL=""
+ENV WEBCHAT_URL="/webchat/webchat.js"
 RUN yarn build:cxone-chat
 RUN yarn build:sdk
 RUN yarn build:demo
@@ -57,6 +62,7 @@ RUN yarn install --frozen-lockfile --production
 COPY --from=builder /app/demo-app/dist ./demo-app/dist
 COPY --from=builder /app/sdk-app/dist ./sdk-app/dist
 COPY --from=builder /app/cxone-chat/dist ./cxone-chat/dist
+COPY --from=builder /app/webchat/dist ./webchat/dist
 COPY --from=builder /app/server.production.js ./
 
 # Create data directory for SQLite

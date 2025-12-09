@@ -249,6 +249,13 @@ if (existsSync(cxoneChatPath)) {
   console.log(`[Server] Serving cxone-chat from ${cxoneChatPath}`);
 }
 
+// Serve webchat files (our fork)
+const webchatPath = join(__dirname, 'webchat', 'dist');
+if (existsSync(webchatPath)) {
+  app.use('/webchat', express.static(webchatPath, { maxAge: '1d' }));
+  console.log(`[Server] Serving webchat from ${webchatPath}`);
+}
+
 // Serve sdk-app files
 const sdkAppPath = join(__dirname, 'sdk-app', 'dist');
 if (existsSync(sdkAppPath)) {

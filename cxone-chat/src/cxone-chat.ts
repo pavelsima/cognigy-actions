@@ -13,8 +13,8 @@
 // ============================================================================
 
 const CONFIG = {
-  // Cognigy Webchat
-  WEBCHAT_SCRIPT: 'https://github.com/Cognigy/Webchat/releases/latest/download/webchat.js',
+  // Cognigy Webchat (injected at build time - uses our server in prod, GitHub in dev)
+  WEBCHAT_SCRIPT: process.env.WEBCHAT_URL,
   WEBCHAT_ENDPOINT: 'https://cognigy-endpoint-na1.nicecxone.com/ac0b6002f0960b5dffcb867a93477f5271be0e57f2abb55bb1e4e5676473a30e',
 
   // Backend for conversation persistence (injected at build time)
