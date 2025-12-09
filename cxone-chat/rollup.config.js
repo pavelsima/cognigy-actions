@@ -4,10 +4,15 @@ import typescript from '@rollup/plugin-typescript';
 import terser from '@rollup/plugin-terser';
 import replace from '@rollup/plugin-replace';
 
+// Use empty string for production (same-origin), localhost for dev
+const backendUrl = process.env.BACKEND_URL !== undefined
+  ? process.env.BACKEND_URL
+  : 'http://localhost:3002';
+
 const envReplace = replace({
   preventAssignment: true,
   values: {
-    'process.env.BACKEND_URL': JSON.stringify(process.env.BACKEND_URL || 'http://localhost:3002'),
+    'process.env.BACKEND_URL': JSON.stringify(backendUrl),
   },
 });
 

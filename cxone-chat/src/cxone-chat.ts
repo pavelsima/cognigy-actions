@@ -2,10 +2,10 @@
  * CXone Chat - One-liner initialization script
  *
  * Usage:
- *   <script src="cxone-chat.js"></script>
- *   <script>
- *     CXOneChat.init({ context: 'actions' });
- *   </script>
+ <script src="cxone-chat.js"></script>
+  <script>
+    CXOneChat.init({ context: 'actions' });
+   </script>
  */
 
 // ============================================================================
@@ -357,8 +357,6 @@ const CXOneChat = {
           behavior: {
             enableTypingIndicator: true,
             messageDelay: 500,
-            enableHTML: true,
-            enableMarkdown: true,
           },
           homeScreen: {
             enabled: true,

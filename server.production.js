@@ -90,13 +90,24 @@ app.get('/api/conversations', (req, res) => {
 
       return {
         sessionId: session.id,
-        messages: messages.map((msg) => ({
-          id: msg.id,
-          text: msg.text,
-          source: msg.source,
-          timestamp: msg.timestamp,
-          data: msg.data ? JSON.parse(msg.data) : undefined,
-        })),
+        messages: messages.map((msg) => {
+          // Parse text: bot messages are stored as JSON arrays, user messages as strings
+          let text = msg.text;
+          if (msg.source === 'bot' && msg.text) {
+            try {
+              text = JSON.parse(msg.text);
+            } catch {
+              // If parsing fails, keep as string
+            }
+          }
+          return {
+            id: msg.id,
+            text,
+            source: msg.source,
+            timestamp: msg.timestamp,
+            data: msg.data ? JSON.parse(msg.data) : undefined,
+          };
+        }),
         rating: { hasGivenRating: false },
       };
     });
@@ -108,6 +119,9 @@ app.get('/api/conversations', (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+// Time window for merging streaming messages (ms)
+const MESSAGE_MERGE_WINDOW_MS = 2000;
 
 app.post('/api/conversations/message', (req, res) => {
   const { userId, sessionId, message } = req.body;
@@ -127,17 +141,56 @@ app.post('/api/conversations/message', (req, res) => {
       db.prepare('UPDATE sessions SET updated_at = ? WHERE id = ?').run(now, sessionId);
     }
 
-    db.prepare(
-      'INSERT OR REPLACE INTO messages (id, session_id, user_id, text, source, timestamp, data) VALUES (?, ?, ?, ?, ?, ?, ?)'
-    ).run(
-      message.id,
-      sessionId,
-      userId,
-      message.text || '',
-      message.source || 'unknown',
-      message.timestamp || now,
-      message.data ? JSON.stringify(message.data) : null
-    );
+    // Check for recent message from same source to merge (handles streaming)
+    const recentMessage = db.prepare(`
+      SELECT id, text, timestamp FROM messages
+      WHERE session_id = ? AND source = ? AND timestamp > ?
+      ORDER BY timestamp DESC LIMIT 1
+    `).get(sessionId, message.source || 'unknown', now - MESSAGE_MERGE_WINDOW_MS);
+
+    if (recentMessage && message.source === 'bot') {
+      // Merge streaming: append text to array
+      let existingText;
+      try {
+        existingText = JSON.parse(recentMessage.text);
+        if (!Array.isArray(existingText)) {
+          existingText = existingText ? [existingText] : [];
+        }
+      } catch {
+        existingText = recentMessage.text ? [recentMessage.text] : [];
+      }
+
+      // Append new text chunk
+      if (message.text) {
+        existingText.push(message.text);
+      }
+
+      // Update with merged text array and latest properties
+      db.prepare(
+        'UPDATE messages SET text = ?, data = ? WHERE id = ?'
+      ).run(
+        JSON.stringify(existingText),
+        message.data ? JSON.stringify(message.data) : null,
+        recentMessage.id
+      );
+    } else {
+      // Insert new message (store text as array for bot, string for user)
+      const textToStore = message.source === 'bot' && message.text
+        ? JSON.stringify([message.text])
+        : message.text || '';
+
+      db.prepare(
+        'INSERT OR REPLACE INTO messages (id, session_id, user_id, text, source, timestamp, data) VALUES (?, ?, ?, ?, ?, ?, ?)'
+      ).run(
+        message.id,
+        sessionId,
+        userId,
+        textToStore,
+        message.source || 'unknown',
+        message.timestamp || now,
+        message.data ? JSON.stringify(message.data) : null
+      );
+    }
 
     res.json({ success: true });
   } catch (error) {

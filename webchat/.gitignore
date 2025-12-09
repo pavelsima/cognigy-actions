@@ -1,0 +1,18 @@
+node_modules
+dist/*.js
+dist/*.gz
+dist/*.br
+dist/*.zip
+dist/*.webmanifest
+dist/index.html
+
+cypress/screenshots
+cypress/videos
+.DS_Store
+
+# Editor directories and files
+.vscode/*
+!vscode/launch.json
+!.vscode/extensions.json
+
+stats.json

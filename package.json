@@ -7,14 +7,17 @@
     "demo-app",
     "sdk-app",
     "cxone-chat",
-    "backend"
+    "backend",
+    "webchat"
   ],
   "scripts": {
     "dev": "yarn workspace demo-app dev",
     "dev:all": "concurrently \"yarn dev\" \"yarn backend\"",
+    "dev:webchat": "yarn workspace @cognigy/webchat dev",
     "backend": "node backend/server.js",
     "build:sdk": "yarn workspace @cxone/webchat-sdk build",
     "build:cxone-chat": "yarn workspace @cxone/chat build",
+    "build:webchat": "yarn workspace @cognigy/webchat build",
     "build:demo": "yarn workspace demo-app build",
     "build": "yarn build:cxone-chat && yarn build:sdk && yarn build:demo",
     "build:gh-pages": "yarn build:cxone-chat && yarn build:sdk && yarn workspace demo-app build:gh-pages",

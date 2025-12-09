@@ -1,0 +1,46 @@
+name: Publish to NPM (with pre-release tag)
+
+on:
+    release:
+        types: [published]
+
+jobs:
+    get-version-number:
+        runs-on: ubuntu-latest
+        outputs:
+            version: ${{ steps.get-version.outputs.version }}
+        steps:
+            - name: Get release version
+              id: get-version
+              run: |
+                  TAG_NAME="${{ github.event.release.tag_name }}"
+                  RELEASE_VERSION="${TAG_NAME#v}"
+                  if [ -z "$RELEASE_VERSION" ]; then
+                    echo "No release version found."
+                    exit 1
+                  fi
+                  echo "version=$RELEASE_VERSION" >> $GITHUB_OUTPUT
+                  echo "Using release version: $RELEASE_VERSION"
+
+    publish:
+        needs: get-version-number
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+              with:
+                  ref: v${{ needs.get-version-number.outputs.version }}
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: 22.x
+            - run: git branch # for debugging
+            - run: npm ci
+            - name: Applying auth token
+              run: |
+                  echo "create .npmrc file"
+                  touch .npmrc
+                  echo "registry=https://registry.npmjs.org/" >> .npmrc
+                  echo "save-prefix=" >> .npmrc
+                  echo "//registry.npmjs.org/:_authToken=${{ secrets.npm_token }}" >> .npmrc
+                  echo "npm whoami"
+                  npm whoami
+            - run: npm publish --tag pre-release

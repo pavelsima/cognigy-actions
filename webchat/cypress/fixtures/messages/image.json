@@ -1,0 +1,25 @@
+{
+	"text": null,
+	"data": {
+		"_cognigy": {
+			"_default": {
+				"_image": {
+					"type": "image",
+					"imageUrl": "https://picsum.photos/id/237/200/200",
+					"imageAltText": "A cute dog"
+				}
+			},
+			"_webchat": {
+				"message": {
+					"attachment": {
+						"type": "image",
+						"payload": {
+							"url": "https://picsum.photos/id/237/200/200",
+							"altText": "A cute dog"
+						}
+					}
+				}
+			}
+		}
+	}
+}
