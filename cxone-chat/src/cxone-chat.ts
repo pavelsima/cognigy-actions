@@ -223,19 +223,37 @@ async function fetchConversations(userId: string): Promise<Conversation[]> {
   }
 }
 
-async function saveMessage(
-  userId: string,
-  sessionId: string,
-  message: { id: string; text: string; source: string; timestamp: number; data?: unknown }
-): Promise<void> {
+/**
+ * Sync current localStorage conversation state to backend
+ * This is more reliable than capturing individual events since localStorage is the source of truth
+ */
+async function syncConversationToBackend(userId: string, sessionId: string): Promise<void> {
   try {
-    await fetch(`${CONFIG.BACKEND_URL}/api/conversations/message`, {
+    const endpointToken = extractEndpointToken(CONFIG.WEBCHAT_ENDPOINT);
+    const storageKey = getWebchatStorageKey(userId, sessionId, endpointToken);
+    const stored = localStorage.getItem(storageKey);
+
+    if (!stored) {
+      return;
+    }
+
+    const data = JSON.parse(stored);
+    if (!data.messages || !Array.isArray(data.messages)) {
+      return;
+    }
+
+    await fetch(`${CONFIG.BACKEND_URL}/api/conversations/sync`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, sessionId, message }),
+      body: JSON.stringify({
+        userId,
+        sessionId,
+        messages: data.messages,
+        rating: data.rating,
+      }),
     });
   } catch (error) {
-    console.warn('[CXOneChat] Failed to save message:', error);
+    console.warn('[CXOneChat] Failed to sync conversation:', error);
   }
 }
 
@@ -405,31 +423,24 @@ const CXOneChat = {
       webchatInstance.sendMessage('', { _cxoneContext: { app: currentContext } });
 
       // Step 5: Set up analytics service (single registration, fans out to all handlers)
+      // Debounce sync to avoid too many requests during streaming
+      let syncTimeout: ReturnType<typeof setTimeout> | null = null;
+
       webchatInstance.registerAnalyticsService((event) => {
         const sessionId = webchatInstance?.store?.getState()?.options?.sessionId || '';
         const typedEvent = event as WebchatAnalyticsEvent;
 
-        // Internal: message persistence to backend
-        if (event.type === 'webchat/incoming-message' && event.payload) {
-          const payload = event.payload as { id?: string; text?: string; source?: string; data?: unknown };
-          saveMessage(currentUserId, sessionId, {
-            id: payload.id || `msg-${Date.now()}`,
-            text: payload.text || '',
-            source: payload.source || 'bot',
-            timestamp: Date.now(),
-            data: payload.data as Record<string, unknown> | undefined,
-          });
-        }
-
-        if (event.type === 'webchat/outgoing-message' && event.payload) {
-          const payload = event.payload as { text?: string; data?: unknown };
-          saveMessage(currentUserId, sessionId, {
-            id: `msg-${Date.now()}`,
-            text: payload.text || '',
-            source: 'user',
-            timestamp: Date.now(),
-            data: payload.data as Record<string, unknown> | undefined,
-          });
+        // On any message event, sync localStorage to backend (debounced)
+        // This is more reliable than capturing individual events since localStorage is the source of truth
+        if (event.type === 'webchat/incoming-message' || event.type === 'webchat/outgoing-message') {
+          // Debounce: wait 500ms after last message event before syncing
+          if (syncTimeout) {
+            clearTimeout(syncTimeout);
+          }
+          syncTimeout = setTimeout(() => {
+            syncConversationToBackend(currentUserId, sessionId);
+            syncTimeout = null;
+          }, 500);
         }
 
         if (event.type === 'webchat/switch-session' && event.payload) {

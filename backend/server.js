@@ -110,20 +110,18 @@ app.get('/api/conversations', (req, res) => {
   }
 });
 
-// Time window for merging streaming messages (ms)
-const MESSAGE_MERGE_WINDOW_MS = 2000;
-
 /**
- * POST /api/conversations/message
+ * POST /api/conversations/sync
  *
- * Save a message to a conversation. Creates session if it doesn't exist.
- * For bot messages: merges streaming chunks into text array within time window.
+ * Sync a complete conversation from localStorage to the database.
+ * This replaces all messages for the session with the provided data.
+ * This is more reliable than individual message saves since localStorage is the source of truth.
  */
-app.post('/api/conversations/message', (req, res) => {
-  const { userId, sessionId, message } = req.body;
+app.post('/api/conversations/sync', (req, res) => {
+  const { userId, sessionId, messages, rating } = req.body;
 
-  if (!userId || !sessionId || !message) {
-    return res.status(400).json({ error: 'userId, sessionId, and message are required' });
+  if (!userId || !sessionId || !messages) {
+    return res.status(400).json({ error: 'userId, sessionId, and messages are required' });
   }
 
   try {
@@ -143,62 +141,33 @@ app.post('/api/conversations/message', (req, res) => {
       db.prepare('UPDATE sessions SET updated_at = ? WHERE id = ?').run(now, sessionId);
     }
 
-    // Check for recent message from same source to merge (handles streaming)
-    const recentMessage = db.prepare(`
-      SELECT id, text, timestamp FROM messages
-      WHERE session_id = ? AND source = ? AND timestamp > ?
-      ORDER BY timestamp DESC LIMIT 1
-    `).get(sessionId, message.source || 'unknown', now - MESSAGE_MERGE_WINDOW_MS);
+    // Delete existing messages for this session
+    db.prepare('DELETE FROM messages WHERE session_id = ?').run(sessionId);
 
-    if (recentMessage && message.source === 'bot') {
-      // Merge streaming: append text to array
-      let existingText;
-      try {
-        existingText = JSON.parse(recentMessage.text);
-        if (!Array.isArray(existingText)) {
-          existingText = existingText ? [existingText] : [];
-        }
-      } catch {
-        existingText = recentMessage.text ? [recentMessage.text] : [];
-      }
+    // Insert all messages from localStorage
+    const insertStmt = db.prepare(
+      'INSERT INTO messages (id, session_id, user_id, text, source, timestamp, data) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    );
 
-      // Append new text chunk
-      if (message.text) {
-        existingText.push(message.text);
-      }
+    for (const msg of messages) {
+      // Store text as-is (can be string or array for bot messages)
+      const textToStore = typeof msg.text === 'string' ? msg.text : JSON.stringify(msg.text);
 
-      // Update with merged text array and latest properties
-      db.prepare(
-        'UPDATE messages SET text = ?, data = ? WHERE id = ?'
-      ).run(
-        JSON.stringify(existingText),
-        message.data ? JSON.stringify(message.data) : null,
-        recentMessage.id
-      );
-      console.log(`[Backend] Merged streaming chunk into ${recentMessage.id}`);
-    } else {
-      // Insert new message (store text as array for bot, string for user)
-      const textToStore = message.source === 'bot' && message.text
-        ? JSON.stringify([message.text])
-        : message.text || '';
-
-      db.prepare(
-        'INSERT OR REPLACE INTO messages (id, session_id, user_id, text, source, timestamp, data) VALUES (?, ?, ?, ?, ?, ?, ?)'
-      ).run(
-        message.id,
+      insertStmt.run(
+        msg.id,
         sessionId,
         userId,
         textToStore,
-        message.source || 'unknown',
-        message.timestamp || now,
-        message.data ? JSON.stringify(message.data) : null
+        msg.source || 'unknown',
+        msg.timestamp || now,
+        msg.data ? JSON.stringify(msg.data) : null
       );
-      console.log(`[Backend] Saved message ${message.id} to session ${sessionId}`);
     }
 
-    res.json({ success: true });
+    console.log(`[Backend] Synced ${messages.length} messages for session ${sessionId}`);
+    res.json({ success: true, messageCount: messages.length });
   } catch (error) {
-    console.error('[Backend] Error saving message:', error);
+    console.error('[Backend] Error syncing conversation:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
