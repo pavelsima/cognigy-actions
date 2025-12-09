@@ -22,6 +22,11 @@ const router = createRouter({
       name: 'knowledge',
       component: () => import('@/views/KnowledgeArticleView.vue'),
     },
+    {
+      path: '/docs',
+      name: 'docs',
+      component: () => import('@/views/DocsView.vue'),
+    },
   ],
   scrollBehavior() {
     return { top: 0 }

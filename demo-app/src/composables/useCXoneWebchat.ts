@@ -13,6 +13,9 @@ import { useTableData } from './useTableData'
 // In production, this would be a CDN URL
 const CXONE_CHAT_SCRIPT = '/cxone-chat/cxone-chat.js'
 
+// Default Cognigy endpoint (can be overridden in init)
+const DEFAULT_COGNIGY_ENDPOINT = 'https://cognigy-endpoint-na1.nicecxone.com/ac0b6002f0960b5dffcb867a93477f5271be0e57f2abb55bb1e4e5676473a30e'
+
 type LoaderStatus = 'idle' | 'loading' | 'ready' | 'error'
 
 type WebchatAnalyticsEvent = {
@@ -35,6 +38,7 @@ interface CXOneChatInstance {
 }
 
 interface CXOneChatConfig {
+  endpoint: string
   context: string
   userId?: string
   container?: HTMLElement | string
@@ -242,9 +246,14 @@ const attachAnalyticsLogger = (instance: CXOneChatInstance | null) => {
 
 /**
  * Initialize CXone Webchat
- * @param options Optional configuration for container, embedded mode, and close callback
+ * @param options Optional configuration for endpoint, container, embedded mode, and close callback
  */
-const init = async (options?: { container?: HTMLElement | string; embedded?: boolean; onEmbeddedClose?: () => void }) => {
+const init = async (options?: {
+  endpoint?: string
+  container?: HTMLElement | string
+  embedded?: boolean
+  onEmbeddedClose?: () => void
+}) => {
   if (status.value === 'loading' || status.value === 'ready') return
 
   status.value = 'loading'
@@ -258,6 +267,7 @@ const init = async (options?: { container?: HTMLElement | string; embedded?: boo
     // Initialize with container/embedded options if provided
     console.log('[CXone Webchat] Initializing...', options)
     chatInstance = await window.CXOneChat.init({
+      endpoint: options?.endpoint || DEFAULT_COGNIGY_ENDPOINT,
       context: 'actions',
       container: options?.container,
       embedded: options?.embedded,

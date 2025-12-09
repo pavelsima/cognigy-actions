@@ -222,6 +222,54 @@ app.post('/api/conversations/session', (req, res) => {
   }
 });
 
+app.post('/api/conversations/sync', (req, res) => {
+  const { userId, sessionId, messages, rating } = req.body;
+  if (!userId || !sessionId || !messages) {
+    return res.status(400).json({ error: 'userId, sessionId, and messages are required' });
+  }
+
+  try {
+    const now = Date.now();
+
+    // Ensure session exists
+    const existingSession = db.prepare('SELECT id FROM sessions WHERE id = ?').get(sessionId);
+    if (!existingSession) {
+      db.prepare('INSERT INTO sessions (id, user_id, created_at, updated_at) VALUES (?, ?, ?, ?)').run(
+        sessionId, userId, now, now
+      );
+    } else {
+      db.prepare('UPDATE sessions SET updated_at = ? WHERE id = ?').run(now, sessionId);
+    }
+
+    // Delete existing messages for this session
+    db.prepare('DELETE FROM messages WHERE session_id = ?').run(sessionId);
+
+    // Insert all messages from localStorage
+    const insertStmt = db.prepare(
+      'INSERT INTO messages (id, session_id, user_id, text, source, timestamp, data) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    );
+
+    for (const msg of messages) {
+      const textToStore = typeof msg.text === 'string' ? msg.text : JSON.stringify(msg.text);
+      insertStmt.run(
+        msg.id,
+        sessionId,
+        userId,
+        textToStore,
+        msg.source || 'unknown',
+        msg.timestamp || now,
+        msg.data ? JSON.stringify(msg.data) : null
+      );
+    }
+
+    console.log(`[API] Synced ${messages.length} messages for session ${sessionId}`);
+    res.json({ success: true, messageCount: messages.length });
+  } catch (error) {
+    console.error('[API] Error syncing conversation:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.delete('/api/conversations', (req, res) => {
   const { userId } = req.query;
   if (!userId) {

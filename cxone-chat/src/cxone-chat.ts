@@ -2,22 +2,24 @@
  * CXone Chat - One-liner initialization script
  *
  * Usage:
- <script src="cxone-chat.js"></script>
-  <script>
-    CXOneChat.init({ context: 'actions' });
-   </script>
+ * <script src="cxone-chat.js"></script>
+ * <script>
+ *   CXOneChat.init({
+ *     endpoint: 'https://your-cognigy-endpoint.com/...',
+ *     context: 'actions'
+ *   });
+ * </script>
  */
 
 // ============================================================================
-// Configuration (hardcoded - managed by CXone team)
+// Configuration
 // ============================================================================
 
 const CONFIG = {
-  // Cognigy Webchat (injected at build time - uses our server in prod, GitHub in dev)
+  // Cognigy Webchat script URL (injected at build time)
   WEBCHAT_SCRIPT: process.env.WEBCHAT_URL,
-  WEBCHAT_ENDPOINT: 'https://cognigy-endpoint-na1.nicecxone.com/ac0b6002f0960b5dffcb867a93477f5271be0e57f2abb55bb1e4e5676473a30e',
 
-  // Backend for conversation persistence (injected at build time)
+  // Backend for conversation persistence (injected at build time, empty = same origin)
   BACKEND_URL: process.env.BACKEND_URL,
 
   // CXone Theming
@@ -36,11 +38,16 @@ const CONFIG = {
   },
 } as const;
 
+// Runtime endpoint (set during init)
+let currentEndpoint: string = '';
+
 // ============================================================================
 // Types
 // ============================================================================
 
 export interface CXOneChatConfig {
+  /** Required: Cognigy webchat endpoint URL */
+  endpoint: string;
   /** Required: Application context (e.g., 'actions', 'dashboard', 'admin') */
   context: string;
   /** Optional: User ID. If not provided, will be auto-detected from cookies/localStorage */
@@ -229,7 +236,7 @@ async function fetchConversations(userId: string): Promise<Conversation[]> {
  */
 async function syncConversationToBackend(userId: string, sessionId: string): Promise<void> {
   try {
-    const endpointToken = extractEndpointToken(CONFIG.WEBCHAT_ENDPOINT);
+    const endpointToken = extractEndpointToken(currentEndpoint);
     const storageKey = getWebchatStorageKey(userId, sessionId, endpointToken);
     const stored = localStorage.getItem(storageKey);
 
@@ -307,11 +314,20 @@ const CXOneChat = {
    * Initialize CXone Chat
    *
    * @example
-   * CXOneChat.init({ context: 'actions' });
+   * CXOneChat.init({
+   *   endpoint: 'https://your-cognigy-endpoint.com/...',
+   *   context: 'actions'
+   * });
    *
    * @example
-   * // With custom userId
-   * CXOneChat.init({ context: 'actions', userId: 'user-123' });
+   * // With custom userId and embedded mode
+   * CXOneChat.init({
+   *   endpoint: 'https://your-cognigy-endpoint.com/...',
+   *   context: 'actions',
+   *   userId: 'user-123',
+   *   embedded: true,
+   *   container: '#chat-sidebar'
+   * });
    */
   async init(config: CXOneChatConfig): Promise<CXOneChatInstance> {
     if (instance) {
@@ -319,19 +335,24 @@ const CXOneChat = {
       return instance;
     }
 
-    const { context, userId, container, embedded, onEmbeddedClose } = config;
+    const { endpoint, context, userId, container, embedded, onEmbeddedClose } = config;
+
+    if (!endpoint) {
+      throw new Error('[CXOneChat] endpoint is required');
+    }
 
     if (!context) {
       throw new Error('[CXOneChat] context is required');
     }
 
+    currentEndpoint = endpoint;
     currentContext = context;
     currentUserId = userId || detectUserId();
 
     console.log(`[CXOneChat] Initializing for context: ${currentContext}, userId: ${currentUserId}${embedded ? ', embedded mode' : ''}`);
 
     try {
-      const endpointToken = extractEndpointToken(CONFIG.WEBCHAT_ENDPOINT);
+      const endpointToken = extractEndpointToken(currentEndpoint);
 
       // Step 1: Pre-load conversations from backend
       console.log('[CXOneChat] Loading previous conversations...');
@@ -365,7 +386,7 @@ const CXOneChat = {
 
       // Step 3: Initialize webchat with CXone theme
       console.log('[CXOneChat] Configuring webchat...');
-      webchatInstance = await window.initWebchat(CONFIG.WEBCHAT_ENDPOINT, {
+      webchatInstance = await window.initWebchat(currentEndpoint, {
         userId: currentUserId,
         container,
         embedded,

@@ -8,10 +8,9 @@ import CustomChatModal from '@/components/CustomChatModal.vue'
 
 const { status, init, open } = useCognigyWebchat()
 const { open: openCustomChat } = useCustomChat()
-const { status: cxoneStatus, init: initCXone } = useCXoneWebchat()
+const { init: initCXone } = useCXoneWebchat()
 
 const isChatReady = computed(() => status.value === 'ready')
-const isCXoneReady = computed(() => cxoneStatus.value === 'ready')
 const isSidebarOpen = ref(false)
 const cxoneInitialized = ref(false)
 
@@ -19,6 +18,7 @@ const tabs = [
   { label: 'Insights', to: '/insights' },
   { label: 'Email', to: '/email' },
   { label: 'Knowledge Article', to: '/knowledge' },
+  { label: 'API Docs', to: '/docs' },
 ]
 
 onMounted(() => {
