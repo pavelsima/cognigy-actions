@@ -413,6 +413,10 @@ export interface IWebchatSettings {
 			timeout: number;
 			title: string;
 		};
+		/** When true, webchat is embedded in a container (not fixed overlay) */
+		_embedded?: boolean;
+		/** Callback when close button is clicked in embedded mode (e.g., to close sidebar) */
+		_onEmbeddedClose?: () => void;
 	};
 
 	// Additional Settings to configure the webchat widget behavior

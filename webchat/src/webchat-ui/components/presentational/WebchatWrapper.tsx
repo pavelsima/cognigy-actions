@@ -1,9 +1,18 @@
 import styled from "@emotion/styled";
 
-const WebchatWrapper = styled.div({
+interface WebchatWrapperProps {
+	embedded?: boolean;
+}
+
+const WebchatWrapper = styled.div<WebchatWrapperProps>(({ embedded }) => ({
 	display: "flex",
 	flexDirection: "column",
-	alignItems: "flex-end",
-});
+	alignItems: embedded ? "stretch" : "flex-end",
+	...(embedded && {
+		position: "relative",
+		width: "100%",
+		height: "100%",
+	}),
+}));
 
 export default WebchatWrapper;

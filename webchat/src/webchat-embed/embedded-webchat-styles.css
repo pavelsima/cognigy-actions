@@ -1,9 +1,10 @@
-[data-cognigy-webchat-root] {
+/* Default (non-embedded) mode */
+[data-cognigy-webchat-root]:not(.webchat-embedded-mode) {
 	position: relative;
 	z-index: 9999;
 }
 
-[data-cognigy-webchat-root] [data-cognigy-webchat] {
+[data-cognigy-webchat-root]:not(.webchat-embedded-mode) [data-cognigy-webchat] {
 	position: fixed;
 
 	left: 0;
@@ -15,7 +16,7 @@
 	z-index: 2;
 }
 
-[data-cognigy-webchat-root] button[data-cognigy-webchat-toggle] {
+[data-cognigy-webchat-root]:not(.webchat-embedded-mode) button[data-cognigy-webchat-toggle] {
 	position: fixed;
 
 	right: 20px;
@@ -38,7 +39,7 @@
 }
 
 @media screen and (min-width: 576px) {
-	[data-cognigy-webchat-root] {
+	[data-cognigy-webchat-root]:not(.webchat-embedded-mode) {
 		position: relative;
 
 		left: auto;
@@ -49,12 +50,12 @@
 		height: 100%;
 	}
 
-	[data-cognigy-webchat-root]:dir(rtl) {
+	[data-cognigy-webchat-root]:not(.webchat-embedded-mode):dir(rtl) {
 		right: auto;
 		left: unset;
 	}
 
-	[data-cognigy-webchat-root] [data-cognigy-webchat] {
+	[data-cognigy-webchat-root]:not(.webchat-embedded-mode) [data-cognigy-webchat] {
 		left: auto;
 		top: auto;
 
@@ -70,14 +71,14 @@
 			0 8px 58px 0 rgba(216, 212, 221, 0.1);
 	}
 
-	[data-cognigy-webchat-root] [data-cognigy-webchat]:dir(rtl) {
+	[data-cognigy-webchat-root]:not(.webchat-embedded-mode) [data-cognigy-webchat]:dir(rtl) {
 		right: auto;
 		left: 20px;
 	}
 }
 
 @media screen and (min-width: 576px) and (max-height: 870px) {
-	[data-cognigy-webchat-root] [data-cognigy-webchat] {
+	[data-cognigy-webchat-root]:not(.webchat-embedded-mode) [data-cognigy-webchat] {
 		height: calc(100% - 90px);
 	}
 }
@@ -88,4 +89,72 @@
 
 .cc-rtl-flip-invert:dir(rtl) {
 	transform: scaleX(1) !important;
+}
+
+/* Embedded mode - webchat fills its container instead of fixed positioning */
+/* Outer wrapper created by initWebchat */
+.webchat-embedded {
+	position: relative !important;
+	width: 100% !important;
+	height: 100% !important;
+}
+
+/* Webchat root element with embedded mode class */
+[data-cognigy-webchat-root].webchat-embedded-mode {
+	position: relative !important;
+	width: 100% !important;
+	height: 100% !important;
+	z-index: 1 !important;
+	left: auto !important;
+	top: auto !important;
+	right: auto !important;
+	bottom: auto !important;
+}
+
+/* Webchat window in embedded mode */
+[data-cognigy-webchat-root].webchat-embedded-mode [data-cognigy-webchat] {
+	position: absolute !important;
+	left: 0 !important;
+	top: 0 !important;
+	right: 0 !important;
+	bottom: 0 !important;
+	width: 100% !important;
+	height: 100% !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
+}
+
+/* Hide FAB toggle button in embedded mode */
+[data-cognigy-webchat-root].webchat-embedded-mode button[data-cognigy-webchat-toggle] {
+	display: none !important;
+}
+
+/* Remove border-bottom from input text when active */
+[data-cognigy-webchat-root] .webchat-input-text-active {
+	border-bottom: none !important;
+}
+
+/* Override media queries for embedded mode */
+@media screen and (min-width: 576px) {
+	[data-cognigy-webchat-root].webchat-embedded-mode {
+		position: relative !important;
+		width: 100% !important;
+		height: 100% !important;
+		left: auto !important;
+		top: auto !important;
+		right: auto !important;
+		bottom: auto !important;
+	}
+
+	[data-cognigy-webchat-root].webchat-embedded-mode [data-cognigy-webchat] {
+		position: absolute !important;
+		left: 0 !important;
+		top: 0 !important;
+		right: 0 !important;
+		bottom: 0 !important;
+		width: 100% !important;
+		height: 100% !important;
+		border-radius: 0 !important;
+		box-shadow: none !important;
+	}
 }

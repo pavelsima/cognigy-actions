@@ -1114,6 +1114,8 @@ export class WebchatUI extends React.PureComponent<
 			this.chatToggleButtonRef.current?.focus();
 		};
 
+		const isEmbedded = config.settings.embeddingConfiguration?._embedded === true;
+
 		return (
 			<>
 				<ThemeProvider theme={theme}>
@@ -1122,10 +1124,11 @@ export class WebchatUI extends React.PureComponent<
 						<WebchatWrapper
 							data-cognigy-webchat-root
 							{...restProps}
-							className="webchat-root"
+							className={classNames("webchat-root", { "webchat-embedded-mode": isEmbedded })}
 							aria-label={chatRegionAriaLabel}
 							role="region"
 							onKeyDown={this.handleKeydown}
+							embedded={isEmbedded}
 						>
 							<CacheProvider value={styleCache}>
 								{open &&
@@ -1143,6 +1146,7 @@ export class WebchatUI extends React.PureComponent<
 											chatWindowWidth={
 												this.props.config.settings.layout.chatWindowWidth
 											}
+											embedded={isEmbedded}
 										>
 											{!fullscreenMessage
 												? this.renderRegularLayout(isInforming)
@@ -1156,7 +1160,7 @@ export class WebchatUI extends React.PureComponent<
 											/>
 										</WebchatRoot>
 									)}
-								{!disableToggleButton && (
+								{!disableToggleButton && !isEmbedded && (
 									<div>
 										{
 											// Show the message teaser if there is a last bot message and the webchat is closed
@@ -1275,6 +1279,8 @@ export class WebchatUI extends React.PureComponent<
 			lastInputId,
 		} = this.props;
 
+		const isEmbedded = config.settings.embeddingConfiguration?._embedded === true;
+
 		let informMessage = "";
 		let informTitle = "";
 		if (config.settings.maintenance.enabled && config.settings.maintenance.mode === "inform") {
@@ -1306,12 +1312,38 @@ export class WebchatUI extends React.PureComponent<
 
 		/** Minimize will only change the open state of the webchat */
 		const handleOnMinimize = () => {
+			// In embedded mode, minimize should also close the sidebar
+			if (isEmbedded) {
+				const onEmbeddedClose = config.settings.embeddingConfiguration?._onEmbeddedClose;
+				if (onEmbeddedClose) {
+					console.log('[WebchatUI] handleOnMinimize in embedded mode - calling onEmbeddedClose');
+					onEmbeddedClose();
+					return;
+				}
+			}
+
 			this.props.onMinimize?.();
 			// Restore focus to chat toggle button
 			this.chatToggleButtonRef?.current?.focus?.();
 		};
 
 		const handleCloseAndReset = () => {
+			const isEmbedded = config.settings.embeddingConfiguration?._embedded === true;
+			const onEmbeddedClose = config.settings.embeddingConfiguration?._onEmbeddedClose;
+
+			console.log('[WebchatUI] handleCloseAndReset called', {
+				isEmbedded,
+				hasOnEmbeddedClose: typeof onEmbeddedClose === 'function',
+				embeddingConfig: config.settings.embeddingConfiguration,
+			});
+
+			// In embedded mode, call the custom close callback (e.g., to close sidebar)
+			if (isEmbedded && onEmbeddedClose) {
+				console.log('[WebchatUI] Calling onEmbeddedClose callback');
+				onEmbeddedClose();
+				return;
+			}
+
 			onSetShowHomeScreen(true);
 			onClose();
 			// Restore focus to chat toggle button
@@ -1507,7 +1539,7 @@ export class WebchatUI extends React.PureComponent<
 						{!isXAppOverlayOpen && (
 							<Header
 								onClose={handleCloseAndReset}
-								onMinimize={handleOnMinimize}
+								onMinimize={isEmbedded ? undefined : handleOnMinimize}
 								onGoBack={showInformationMessage ? undefined : handleOnGoBack}
 								onSetShowChatOptionsScreen={() => {
 									onSetShowChatOptionsScreen(true);

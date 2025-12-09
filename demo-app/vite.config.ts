@@ -105,6 +105,24 @@ function serveWorkspaceAssetsPlugin() {
           }
         }
 
+        // Serve /webchat/* from webchat/dist/*
+        if (url.startsWith('/webchat/')) {
+          const fileName = url.replace('/webchat/', '')
+          const filePath = join(rootDir, 'webchat', 'dist', fileName)
+
+          if (existsSync(filePath) && statSync(filePath).isFile()) {
+            const ext = filePath.split('.').pop()
+            const contentTypes: Record<string, string> = {
+              'js': 'application/javascript',
+              'css': 'text/css',
+              'map': 'application/json',
+            }
+            res.setHeader('Content-Type', contentTypes[ext || ''] || 'text/plain')
+            res.end(readFileSync(filePath))
+            return
+          }
+        }
+
         next()
       })
     }

@@ -34,8 +34,16 @@ interface CXOneChatInstance {
   registerAnalyticsService: (handler: (event: WebchatAnalyticsEvent) => void) => void
 }
 
+interface CXOneChatConfig {
+  context: string
+  userId?: string
+  container?: HTMLElement | string
+  embedded?: boolean
+  onEmbeddedClose?: () => void
+}
+
 interface CXOneChat {
-  init: (config: { context: string; userId?: string }) => Promise<CXOneChatInstance>
+  init: (config: CXOneChatConfig) => Promise<CXOneChatInstance>
   open: () => void
   close: () => void
   toggle: () => void
@@ -234,8 +242,9 @@ const attachAnalyticsLogger = (instance: CXOneChatInstance | null) => {
 
 /**
  * Initialize CXone Webchat
+ * @param options Optional configuration for container, embedded mode, and close callback
  */
-const init = async () => {
+const init = async (options?: { container?: HTMLElement | string; embedded?: boolean; onEmbeddedClose?: () => void }) => {
   if (status.value === 'loading' || status.value === 'ready') return
 
   status.value = 'loading'
@@ -246,10 +255,13 @@ const init = async () => {
     console.log('[CXone Webchat] Loading CXone Chat script...')
     await loadScript(CXONE_CHAT_SCRIPT)
 
-    // Initialize with one line!
-    console.log('[CXone Webchat] Initializing...')
+    // Initialize with container/embedded options if provided
+    console.log('[CXone Webchat] Initializing...', options)
     chatInstance = await window.CXOneChat.init({
       context: 'actions',
+      container: options?.container,
+      embedded: options?.embedded,
+      onEmbeddedClose: options?.onEmbeddedClose,
     })
 
     // Attach analytics logger for handling events

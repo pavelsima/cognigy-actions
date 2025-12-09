@@ -17,6 +17,12 @@ type WebchatSettings = React.ComponentProps<typeof Webchat>["settings"];
 
 type InitWebchatOptions = SocketOptions & {
 	settings?: WebchatSettings;
+	/** Optional container element or selector to embed webchat into. If not provided, appends to document.body */
+	container?: HTMLElement | string;
+	/** When true, webchat uses relative positioning instead of fixed (for embedding in sidebars/panels) */
+	embedded?: boolean;
+	/** Callback when close button is clicked in embedded mode (e.g., to close sidebar) */
+	onEmbeddedClose?: () => void;
 };
 
 declare global {
@@ -73,9 +79,31 @@ const initWebchat = async (
 	settings.embeddingConfiguration = {
 		...settings?.embeddingConfiguration,
 		_endpointTokenUrl: webchatConfigUrl,
+		_embedded: options?.embedded ?? false,
+		_onEmbeddedClose: options?.onEmbeddedClose,
 	} as Partial<IWebchatSettings>["embeddingConfiguration"];
-	const webchatRoot = document.createElement("div");
-	document.body.appendChild(webchatRoot);
+
+	// Determine container element
+	let containerElement: HTMLElement = document.body;
+	if (options?.container) {
+		if (typeof options.container === "string") {
+			const el = document.querySelector(options.container);
+			if (el instanceof HTMLElement) {
+				containerElement = el;
+			} else {
+				console.warn(`[Webchat] Container selector "${options.container}" not found, using document.body`);
+			}
+		} else {
+			containerElement = options.container;
+		}
+	}
+
+	const webchatRoot = containerElement || document.createElement("div");
+
+	// Add embedded class for styling when embedded in a container
+	if (options?.embedded) {
+		webchatRoot.classList.add("webchat-embedded");
+	}
 
 	let cognigyWebchat: Webchat | null = null;
 

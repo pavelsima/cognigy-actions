@@ -45,6 +45,12 @@ export interface CXOneChatConfig {
   context: string;
   /** Optional: User ID. If not provided, will be auto-detected from cookies/localStorage */
   userId?: string;
+  /** Optional: Container element or CSS selector to embed webchat into. If not provided, appends to document.body */
+  container?: HTMLElement | string;
+  /** Optional: When true, webchat uses relative positioning instead of fixed (for embedding in sidebars/panels) */
+  embedded?: boolean;
+  /** Optional: Callback when close button is clicked in embedded mode (e.g., to close sidebar) */
+  onEmbeddedClose?: () => void;
 }
 
 export interface WebchatAnalyticsEvent {
@@ -295,7 +301,7 @@ const CXOneChat = {
       return instance;
     }
 
-    const { context, userId } = config;
+    const { context, userId, container, embedded, onEmbeddedClose } = config;
 
     if (!context) {
       throw new Error('[CXOneChat] context is required');
@@ -304,7 +310,7 @@ const CXOneChat = {
     currentContext = context;
     currentUserId = userId || detectUserId();
 
-    console.log(`[CXOneChat] Initializing for context: ${currentContext}, userId: ${currentUserId}`);
+    console.log(`[CXOneChat] Initializing for context: ${currentContext}, userId: ${currentUserId}${embedded ? ', embedded mode' : ''}`);
 
     try {
       const endpointToken = extractEndpointToken(CONFIG.WEBCHAT_ENDPOINT);
@@ -343,6 +349,9 @@ const CXOneChat = {
       console.log('[CXOneChat] Configuring webchat...');
       webchatInstance = await window.initWebchat(CONFIG.WEBCHAT_ENDPOINT, {
         userId: currentUserId,
+        container,
+        embedded,
+        onEmbeddedClose,
         settings: {
           colorScheme: 'light',
           designTemplate: 1,
@@ -449,6 +458,12 @@ const CXOneChat = {
           analyticsHandlers.push(handler);
         },
       };
+
+      // Step 7: Auto-open in embedded mode (since there's no FAB button)
+      if (embedded) {
+        console.log('[CXOneChat] Embedded mode - auto-opening webchat');
+        webchatInstance.open();
+      }
 
       console.log('[CXOneChat] Ready!');
       return instance;

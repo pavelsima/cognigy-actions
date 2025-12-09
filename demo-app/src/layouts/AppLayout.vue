@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref, nextTick } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useCognigyWebchat } from '@/composables/useCognigyWebchat'
 import { useCustomChat } from '@/composables/useCustomChat'
@@ -8,10 +8,12 @@ import CustomChatModal from '@/components/CustomChatModal.vue'
 
 const { status, init, open } = useCognigyWebchat()
 const { open: openCustomChat } = useCustomChat()
-const { status: cxoneStatus, init: initCXone, open: openCXone } = useCXoneWebchat()
+const { status: cxoneStatus, init: initCXone } = useCXoneWebchat()
 
 const isChatReady = computed(() => status.value === 'ready')
 const isCXoneReady = computed(() => cxoneStatus.value === 'ready')
+const isSidebarOpen = ref(false)
+const cxoneInitialized = ref(false)
 
 const tabs = [
   { label: 'Insights', to: '/insights' },
@@ -21,7 +23,6 @@ const tabs = [
 
 onMounted(() => {
   void init()
-  void initCXone()
 })
 
 const handleOpenChat = () => {
@@ -32,8 +33,23 @@ const handleOpenCustomChat = () => {
   openCustomChat()
 }
 
-const handleOpenCXoneChat = () => {
-  openCXone()
+const closeSidebar = () => {
+  isSidebarOpen.value = false
+}
+
+const handleToggleCXoneChat = async () => {
+  isSidebarOpen.value = !isSidebarOpen.value
+
+  // Initialize CXone chat on first open (after container is visible)
+  if (isSidebarOpen.value && !cxoneInitialized.value) {
+    cxoneInitialized.value = true
+    await nextTick() // Wait for DOM to update
+    void initCXone({
+      container: '#cxone-chat-sidebar',
+      embedded: true,
+      onEmbeddedClose: closeSidebar,
+    })
+  }
 }
 </script>
 
@@ -57,22 +73,27 @@ const handleOpenCXoneChat = () => {
         <button
           class="ghost-button cxone-chat-btn"
           type="button"
-          :disabled="!isCXoneReady"
-          @click="handleOpenCXoneChat"
+          @click="handleToggleCXoneChat"
         >
-          {{ isCXoneReady ? 'Open CXone Chat' : 'Loading CXone Chat' }}
+          {{ isSidebarOpen ? 'Close CXone Chat' : 'Open CXone Chat' }}
         </button>
       </div>
     </header>
 
-    <main class="content-panel glass-panel">
-      <nav class="primary-tabs">
-        <RouterLink v-for="tab in tabs" :key="tab.to" :to="tab.to" class="tab-link">
-          {{ tab.label }}
-        </RouterLink>
-      </nav>
-      <slot />
-    </main>
+    <div class="main-layout">
+      <main class="content-panel glass-panel">
+        <nav class="primary-tabs">
+          <RouterLink v-for="tab in tabs" :key="tab.to" :to="tab.to" class="tab-link">
+            {{ tab.label }}
+          </RouterLink>
+        </nav>
+        <slot />
+      </main>
+
+      <aside v-show="isSidebarOpen" class="chat-sidebar glass-panel">
+        <div id="cxone-chat-sidebar" class="chat-container"></div>
+      </aside>
+    </div>
     <CustomChatModal />
   </div>
 </template>
@@ -86,6 +107,13 @@ const handleOpenCXoneChat = () => {
   gap: 1rem;
 }
 
+.main-layout {
+  display: flex;
+  gap: 1rem;
+  flex: 1;
+  min-height: 0;
+}
+
 .content-panel {
   padding: clamp(1.25rem, 2vw, 2rem);
   display: flex;
@@ -94,5 +122,47 @@ const handleOpenCXoneChat = () => {
   flex: 1;
   min-width: 0;
   overflow: auto;
+}
+
+.chat-sidebar {
+  width: 500px;
+  min-width: 350px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--text-secondary, #6B7280);
+  padding: 0 0.25rem;
+  line-height: 1;
+}
+
+.close-btn:hover {
+  color: var(--text-primary, #1F2937);
+}
+
+.chat-container {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+/* Responsive: stack on smaller screens */
+@media (max-width: 900px) {
+  .main-layout {
+    flex-direction: column;
+  }
+
+  .chat-sidebar {
+    width: 100%;
+    min-width: 0;
+    height: 500px;
+  }
 }
 </style>

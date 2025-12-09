@@ -26,6 +26,7 @@
 		"build": "npm run build:umd && npm run build:esm",
 		"build:umd": "webpack --config webpack.production.js",
 		"build:esm": "webpack --config webpack.es.js",
+		"watch": "webpack --config webpack.production.js --watch",
 		"update-license": "node update-license.js",
 		"dev": "webpack-dev-server --config webpack.dev.js --host 0.0.0.0",
 		"cypress:open:chrome": "cypress open --e2e --browser chrome",
