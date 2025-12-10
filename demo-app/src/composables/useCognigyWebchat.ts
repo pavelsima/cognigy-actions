@@ -4,11 +4,11 @@ import { useExternalScript } from './useExternalScript'
 import { useTableData } from './useTableData'
 
 const WEBCHAT_SCRIPT =
-  'https://github.com/Cognigy/Webchat/releases/latest/download/webchat.js'
+  'https://webchat-dev.cognigy.ai/v3/ea50316a5a49e574da804c75175ce5ea671ba2e15ddd228076dd0d6e339af6c6'
 const WEBCHAT_PLUGIN =
   'https://PetrSvarc.github.io/cognigy-plugin/plugin.js'
 const WEBCHAT_ENDPOINT =
-  'https://cognigy-endpoint-na1.nicecxone.com/ac0b6002f0960b5dffcb867a93477f5271be0e57f2abb55bb1e4e5676473a30e'
+  'https://endpoint-dev.cognigy.ai/ea50316a5a49e574da804c75175ce5ea671ba2e15ddd228076dd0d6e339af6c6'
 
 type LoaderStatus = 'idle' | 'loading' | 'ready' | 'error'
 

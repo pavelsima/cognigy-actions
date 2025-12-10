@@ -58,6 +58,8 @@ export interface CXOneChatConfig {
   embedded?: boolean;
   /** Optional: Callback when close button is clicked in embedded mode (e.g., to close sidebar) */
   onEmbeddedClose?: () => void;
+  /** Optional: CXone Bearer token to send to Cognigy at conversation start */
+  cxoneToken?: string;
 }
 
 export interface WebchatAnalyticsEvent {
@@ -335,7 +337,7 @@ const CXOneChat = {
       return instance;
     }
 
-    const { endpoint, context, userId, container, embedded, onEmbeddedClose } = config;
+    const { endpoint, context, userId, container, embedded, onEmbeddedClose, cxoneToken } = config;
 
     if (!endpoint) {
       throw new Error('[CXOneChat] endpoint is required');
@@ -441,7 +443,11 @@ const CXOneChat = {
       });
 
       // Step 4: Send context to Cognigy
-      webchatInstance.sendMessage('', { _cxoneContext: { app: currentContext } });
+      const initialData: Record<string, unknown> = { _cxoneContext: { app: currentContext } };
+      if (cxoneToken) {
+        initialData.cxoneToken = cxoneToken;
+      }
+      webchatInstance.sendMessage('', initialData);
 
       // Step 5: Set up analytics service (single registration, fans out to all handlers)
       // Debounce sync to avoid too many requests during streaming

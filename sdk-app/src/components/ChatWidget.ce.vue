@@ -77,7 +77,7 @@ const cognigyUserId = ref<string>('')
 const cognigySessionId = ref<string>('')
 
 // Cognigy endpoint configuration
-const COGNIGY_ENDPOINT = 'https://cognigy-endpoint-na1.nicecxone.com/af3b73661ba4dc96a399de0f67d97e971f25a044163ee8e9039c102233822779'
+const COGNIGY_ENDPOINT = 'https://endpoint-dev.cognigy.ai/ea50316a5a49e574da804c75175ce5ea671ba2e15ddd228076dd0d6e339af6c6'
 const COGNIGY_COOKIE = '_752f8=6c0e089d4f25a36d'
 
 // Initialize Cognigy session IDs

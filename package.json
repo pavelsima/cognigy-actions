@@ -12,9 +12,10 @@
   ],
   "scripts": {
     "dev": "yarn workspace demo-app dev",
-    "dev:all": "concurrently \"yarn dev\" \"yarn backend\" \"yarn watch:webchat\"",
+    "dev:all": "concurrently \"yarn dev\" \"yarn backend\" \"yarn watch:webchat\" \"yarn watch:cxone-chat\"",
     "dev:webchat": "yarn workspace @cognigy/webchat dev",
     "watch:webchat": "yarn workspace @cognigy/webchat watch",
+    "watch:cxone-chat": "yarn workspace @cxone/chat build:watch",
     "backend": "node backend/server.js",
     "build:sdk": "yarn workspace @cxone/webchat-sdk build",
     "build:cxone-chat": "yarn workspace @cxone/chat build",

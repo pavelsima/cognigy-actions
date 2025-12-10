@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, nextTick } from 'vue'
+import { computed, onMounted, ref, nextTick, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useCognigyWebchat } from '@/composables/useCognigyWebchat'
 import { useCustomChat } from '@/composables/useCustomChat'
@@ -13,6 +13,19 @@ const { init: initCXone } = useCXoneWebchat()
 const isChatReady = computed(() => status.value === 'ready')
 const isSidebarOpen = ref(false)
 const cxoneInitialized = ref(false)
+
+// Load token from localStorage on mount
+const STORAGE_KEY = 'cxoneToken'
+const cxoneToken = ref(localStorage.getItem(STORAGE_KEY) || '')
+
+// Save token to localStorage whenever it changes
+watch(cxoneToken, (newValue) => {
+  if (newValue) {
+    localStorage.setItem(STORAGE_KEY, newValue)
+  } else {
+    localStorage.removeItem(STORAGE_KEY)
+  }
+})
 
 const tabs = [
   { label: 'Insights', to: '/insights' },
@@ -48,6 +61,7 @@ const handleToggleCXoneChat = async () => {
       container: '#cxone-chat-sidebar',
       embedded: true,
       onEmbeddedClose: closeSidebar,
+      cxoneToken: cxoneToken.value || undefined,
     })
   }
 }
@@ -64,6 +78,12 @@ const handleToggleCXoneChat = async () => {
         </div>
       </div>
       <div class="header-actions">
+        <input
+          v-model="cxoneToken"
+          type="text"
+          placeholder="CXone Bearer Token"
+          class="token-input"
+        />
         <button class="ghost-button" type="button" :disabled="!isChatReady" @click="handleOpenChat">
           {{ isChatReady ? 'Open Webchat' : 'Loading Webchat' }}
         </button>
@@ -151,6 +171,28 @@ const handleToggleCXoneChat = async () => {
   flex: 1;
   min-height: 0;
   position: relative;
+}
+
+.token-input {
+  font-family: inherit;
+  font-size: 0.875rem;
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--cxone-ghost-border);
+  border-radius: 999px;
+  background: var(--cxone-panel-surface);
+  color: var(--cxone-text);
+  min-width: 200px;
+  max-width: 300px;
+  transition: border-color 0.2s ease;
+}
+
+.token-input::placeholder {
+  color: var(--cxone-muted-text);
+}
+
+.token-input:focus {
+  outline: none;
+  border-color: var(--cxone-primary);
 }
 
 /* Responsive: stack on smaller screens */
