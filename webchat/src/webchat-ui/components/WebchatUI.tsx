@@ -51,7 +51,10 @@ import {
 import { HomeScreen } from "./presentational/HomeScreen";
 import { PrevConversationsList } from "./presentational/previous-conversations/ConversationsList";
 import { PrevConversationsState } from "../../webchat/store/previous-conversations/previous-conversations-reducer";
-import { ChatEvent, Message, Typography } from "@cognigy/chat-components";
+import { ChatEvent, Message as OriginalMessage, Typography } from "@cognigy/chat-components";
+import CustomMessage from "./presentational/CustomMessage";
+import MessageGroup from "./presentational/MessageGroup";
+import { groupMessages } from "../utils/groupMessages";
 import { isConversationEnded } from "./presentational/previous-conversations/helpers";
 import { ISendMessageOptions } from "../../webchat/store/messages/message-middleware";
 import { InformationMessage } from "./presentational/InformationMessage";
@@ -1703,9 +1706,10 @@ export class WebchatUI extends React.PureComponent<
 						{AIAgentNoticeText || "You're now chatting with an AI Agent."}
 					</TopStatusMessage>
 				)}
-				{visibleMessages.map((message, index) => {
+				{groupMessages(visibleMessages).map((group, groupIndex) => {
+					const lastMessageIndex = group.startIndex + group.messages.length - 1;
 					// Lookahead if there is a user reply that includes text or attachments
-					const hasReply = visibleMessages.slice(index + 1).some(message => {
+					const hasReply = visibleMessages.slice(lastMessageIndex + 1).some(message => {
 						const isUser = message.source === "user";
 						const hasText =
 							typeof message.text === "string" && message.text.trim().length > 0;
@@ -1719,23 +1723,25 @@ export class WebchatUI extends React.PureComponent<
 					});
 
 					return (
-						<Message
-							key={message.id || JSON.stringify({ message, index })}
-							message={message}
-							action={this.sendMessage}
-							config={config}
-							hasReply={hasReply}
-							isConversationEnded={isEnded}
-							onDismissFullscreen={() => {}}
-							onEmitAnalytics={onEmitAnalytics}
-							onSetFullscreen={() => this.props.onSetFullscreenMessage(message)}
-							openXAppOverlay={openXAppOverlay}
-							plugins={messagePlugins}
-							prevMessage={visibleMessages?.[index - 1]}
-							theme={this.state.theme}
-							onSetMessageAnimated={this.props.onSetMessageAnimated}
-							onSetLiveRegionText={handleLiveRegionText}
-							data-message-id={`webchatMessageId-${message.timestamp}`}
+						<MessageGroup
+							key={`group-${groupIndex}-${group.messages[0]?.id || group.startIndex}`}
+							messages={group.messages}
+							allMessages={visibleMessages}
+							startIndex={group.startIndex}
+							messageProps={{
+								action: this.sendMessage,
+								config: config,
+								hasReply: hasReply,
+								isConversationEnded: isEnded,
+								onDismissFullscreen: () => {},
+								onEmitAnalytics: onEmitAnalytics,
+								onSetFullscreen: (msg: IMessage) => this.props.onSetFullscreenMessage(msg),
+								openXAppOverlay: openXAppOverlay,
+								plugins: messagePlugins,
+								theme: this.state.theme,
+								onSetMessageAnimated: this.props.onSetMessageAnimated,
+								onSetLiveRegionText: handleLiveRegionText,
+							}}
 						/>
 					);
 				})}
