@@ -14,9 +14,14 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = join(__dirname, '..');
+const monorepoRoot = join(rootDir, '..');
 const wrapperDir = join(rootDir, 'wrapper');
 const webchatDir = join(rootDir, 'webchat');
 const distDir = join(rootDir, 'dist');
+
+// Paths to binaries (webpack in webchat's node_modules, rollup in monorepo root)
+const webpackBin = join(webchatDir, 'node_modules', '.bin', 'webpack');
+const rollupBin = join(monorepoRoot, 'node_modules', '.bin', 'rollup');
 
 function run(cmd, cwd = rootDir) {
   console.log(`\n> ${cmd}`);
@@ -32,13 +37,17 @@ function ensureDir(dir) {
 async function build() {
   console.log('🔨 Building CXone Chat...\n');
 
-  // Step 1: Build webchat (both UMD and ESM)
-  console.log('📦 Step 1: Building webchat...');
-  run('npm run build', webchatDir);
+  // Step 1: Install webchat dependencies and build (both UMD and ESM)
+  console.log('📦 Step 1: Installing webchat dependencies...');
+  run('npm install', webchatDir);
+  console.log('📦 Step 1: Building webchat (UMD)...');
+  run(`"${webpackBin}" --config webpack.production.js`, webchatDir);
+  console.log('📦 Step 1: Building webchat (ESM)...');
+  run(`"${webpackBin}" --config webpack.es.js`, webchatDir);
 
   // Step 2: Build cxone-chat wrapper (IIFE and ESM)
   console.log('\n📦 Step 2: Building cxone-chat wrapper...');
-  run(`npx rollup -c ${join(wrapperDir, 'rollup.config.js')}`, wrapperDir);
+  run(`"${rollupBin}" -c ${join(wrapperDir, 'rollup.config.js')}`, wrapperDir);
 
   // Step 3: Create combined bundles
   console.log('\n📦 Step 3: Creating combined bundles...');
