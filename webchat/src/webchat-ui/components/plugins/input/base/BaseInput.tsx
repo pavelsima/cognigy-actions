@@ -2,7 +2,8 @@ import React from "react";
 import styled from "@emotion/styled";
 import classnames from "classnames";
 import { InputComponentProps } from "../../../../../common/interfaces/input-plugin";
-import SendIcon from "./send-icon-16px.svg";
+import SendIconSvg from "../../../../../assets/icons/send.svg";
+import PixieDustIcon from "../../../../../assets/icons/pixie_dust.svg";
 import SpeechIconSVG from "./speech-icon-16px.svg";
 import MenuIcon from "./baseline-menu-24px.svg";
 import AttachFileIcon from "./attachment-icon-16px.svg";
@@ -24,8 +25,75 @@ const InputWrapper = styled.div({
 const InputForm = styled.form<{ persistentMenuOpen: boolean }>(({ persistentMenuOpen }) => ({
 	display: "flex",
 	alignItems: persistentMenuOpen ? "flex-end" : "center",
-	gap: 12,
+	gap: 8,
 	marginBottom: 0,
+}));
+
+// CXone: Bordered input field container with pixie dust icon
+const InputFieldContainer = styled.div(({ theme }) => ({
+	display: "flex",
+	alignItems: "center",
+	flex: 1,
+	padding: "4px 12px",
+	border: "1px solid #D1D5DB",
+	borderRadius: 8,
+	backgroundColor: "#FFFFFF",
+	transition: "border-color 0.2s",
+	gap: 8,
+
+	"&:focus-within": {
+		borderColor: theme.primaryColor || "#0C3985",
+	},
+}));
+
+// CXone: Pixie dust icon button inside input
+const PixieDustButton = styled.button(({ theme }) => ({
+	background: "none",
+	border: "none",
+	padding: 4,
+	cursor: "pointer",
+	display: "flex",
+	alignItems: "center",
+	justifyContent: "center",
+	color: theme.primaryColor || "#0C3985",
+	flexShrink: 0,
+
+	svg: {
+		width: 20,
+		height: 20,
+	},
+}));
+
+// CXone: Send button in separate bordered box
+const SendButtonContainer = styled.button(({ theme }) => ({
+	display: "flex",
+	alignItems: "center",
+	justifyContent: "center",
+	width: 44,
+	height: 44,
+	padding: 0,
+	border: "1px solid #D1D5DB",
+	borderRadius: 8,
+	backgroundColor: "#FFFFFF",
+	cursor: "pointer",
+	transition: "all 0.2s",
+	flexShrink: 0,
+	color: "#9CA3AF",
+
+	"&:hover:not(:disabled)": {
+		borderColor: theme.primaryColor || "#0C3985",
+		color: theme.primaryColor || "#0C3985",
+	},
+
+	"&:disabled": {
+		cursor: "not-allowed",
+		color: "#D1D5DB",
+	},
+
+	svg: {
+		width: 16,
+		height: 16,
+	},
 }));
 
 const TextArea = styled(TextareaAutosize)(({ theme }) => ({
@@ -40,10 +108,11 @@ const TextArea = styled(TextareaAutosize)(({ theme }) => ({
 	resize: "none",
 	backgroundColor: "transparent",
 
+	// CXone typography: body3 with 20px line height
 	fontSize: "0.875rem", // 14px
 	fontStyle: "normal",
 	fontWeight: 400,
-	lineHeight: "140%",
+	lineHeight: "20px",
 
 	"::-webkit-scrollbar": {
 		width: 2,
@@ -151,6 +220,16 @@ const InputContainer = styled.div({
 	flexDirection: "column",
 	flexGrow: 1,
 });
+
+// CXone: Character counter for input
+const CharacterCounter = styled.div(({ theme }) => ({
+	position: "absolute",
+	bottom: -18,
+	right: 0,
+	fontSize: "0.75rem",
+	color: theme.black60,
+	fontFamily: theme.fontFamily,
+}));
 
 const Label = styled(FloatingLabel)({
 	padding: "8px 2px",
@@ -554,83 +633,99 @@ export class BaseInput extends React.PureComponent<IBaseInputProps, IBaseInputSt
 										</AttachFileButton>
 									</>
 								)}
-								<MediaQuery maxWidth={575}>
-									{matches => {
-										const hasValue = !!combineStrings(text, speechInterim);
-										return (
-											<InputContainer className="webchat-input-message-container">
-												<Label
-													inputId="webchatInputMessageInputInTextMode"
-													isVisible={!hasValue}
-													label={
-														props.config.settings.behavior
-															.inputPlaceholder
-													}
-													className="webchat-input-message-label"
-												/>
-												<TextArea
-													ref={
-														this
-															.inputRef as React.Ref<HTMLTextAreaElement>
-													}
-													autoFocus={!disableInputAutofocus}
-													value={combineStrings(text, speechInterim)}
-													onChange={this.handleChangeTextValue}
-													onFocus={this.handleFocus}
-													onBlur={this.handleBlur}
-													onKeyDown={this.handleInputKeyDown}
-													className="webchat-input-message-input"
-													minRows={1}
-													maxRows={inputAutogrowMaxRows}
-													autoComplete={
-														disableInputAutocomplete ? "off" : undefined
-													}
-													spellCheck={false}
-													id="webchatInputMessageInputInTextMode"
-													style={
-														matches ? { fontSize: "1rem" } : undefined
-													}
-												/>
-											</InputContainer>
-										);
-									}}
-								</MediaQuery>
+								{/* CXone: Input field with pixie dust icon */}
+								<InputFieldContainer className="webchat-input-field-container">
+									<MediaQuery maxWidth={575}>
+										{matches => {
+											const hasValue = !!combineStrings(text, speechInterim);
+											return (
+												<InputContainer className="webchat-input-message-container">
+													<Label
+														inputId="webchatInputMessageInputInTextMode"
+														isVisible={!hasValue}
+														label={
+															props.config.settings.behavior
+																.inputPlaceholder
+														}
+														className="webchat-input-message-label"
+													/>
+													<TextArea
+														ref={
+															this
+																.inputRef as React.Ref<HTMLTextAreaElement>
+														}
+														autoFocus={!disableInputAutofocus}
+														value={combineStrings(text, speechInterim)}
+														onChange={this.handleChangeTextValue}
+														onFocus={this.handleFocus}
+														onBlur={this.handleBlur}
+														onKeyDown={this.handleInputKeyDown}
+														className="webchat-input-message-input"
+														minRows={1}
+														maxRows={inputAutogrowMaxRows}
+														autoComplete={
+															disableInputAutocomplete ? "off" : undefined
+														}
+														spellCheck={false}
+														id="webchatInputMessageInputInTextMode"
+														style={
+															matches ? { fontSize: "1rem" } : undefined
+														}
+														maxLength={2000}
+													/>
+												</InputContainer>
+											);
+										}}
+									</MediaQuery>
 
-								{props.config.settings.behavior.enableSTT && (
-									<SpeechButton
-										className={classnames(
-											"webchat-input-button-speech",
-											sttActive && "webchat-input-button-speech-active",
-										)}
-										aria-label={
-											customTranslations?.ariaLabels?.speechToText ??
-											"Speech to text"
-										}
-										id="webchatInputMessageSpeechButton"
-										onClick={this.toggleSTT}
-										disabled={!this.isSTTSupported()}
+									{/* CXone: Pixie dust icon inside input */}
+									<PixieDustButton
+										type="button"
+										aria-label="AI Assistant"
+										className="webchat-input-pixie-dust"
 									>
-										{sttActive && (
-											<>
-												<SpeechButtonAnimatedBackground
-													className={classnames(
-														"webchat-input-button-speech-background",
-													)}
-													aria-hidden="true"
-												/>
-												<SpeechButtonBackground
-													className={classnames(
-														"webchat-input-button-speech-background",
-													)}
-													aria-hidden="true"
-												/>
-											</>
-										)}
-										<SpeechIcon />
-									</SpeechButton>
-								)}
+										<PixieDustIcon />
+									</PixieDustButton>
 
-								<SendMessageButton
+									{props.config.settings.behavior.enableSTT && (
+										<SpeechButton
+											className={classnames(
+												"webchat-input-button-speech",
+												sttActive && "webchat-input-button-speech-active",
+											)}
+											aria-label={
+												customTranslations?.ariaLabels?.speechToText ??
+												"Speech to text"
+											}
+											id="webchatInputMessageSpeechButton"
+											onClick={this.toggleSTT}
+											disabled={!this.isSTTSupported()}
+											type="button"
+										>
+											{sttActive && (
+												<>
+													<SpeechButtonAnimatedBackground
+														className={classnames(
+															"webchat-input-button-speech-background",
+														)}
+														aria-hidden="true"
+													/>
+													<SpeechButtonBackground
+														className={classnames(
+															"webchat-input-button-speech-background",
+														)}
+														aria-hidden="true"
+													/>
+												</>
+											)}
+											<SpeechIcon />
+										</SpeechButton>
+									)}
+								</InputFieldContainer>
+
+								{/* CXone: Send button in separate box */}
+								<SendButtonContainer
+									type="submit"
 									disabled={
 										(this.state.text === "" && isFileListEmpty) ||
 										fileUploadError
@@ -642,8 +737,8 @@ export class BaseInput extends React.PureComponent<IBaseInputProps, IBaseInputSt
 									}
 									id="webchatInputMessageSendMessageButton"
 								>
-									<SendIcon />
-								</SendMessageButton>
+									<SendIconSvg />
+								</SendButtonContainer>
 							</>
 						)}
 					</InputForm>

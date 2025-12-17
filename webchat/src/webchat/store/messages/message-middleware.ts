@@ -15,6 +15,10 @@ import { generateRandomId } from "./helper";
 const defaultAgentAvatar =
 	"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAQAAABIkb+zAAACOklEQVR4Ae3ZA2ydURwF8P9s2+bjPSdGo0aN08V+URtbL+a8BbO9xfZs2zaCuW7vbDx8uLfp/3dinw+XopRSSimllFJhYm9TjV08wwdoYB0f8ix2mDkTe0p7YIZxDeto/5I6rjHDxGtdkcc72n8H75CXruKn1CAcpi0cHE4NEv9kp+EubXHB3ew08QuH4hFt8cGj5Ajxx9hePE1bYi6k+4gvMJ+29GCe+CEzhvW0ZaQ+PVZ8wDW0ZWatuJfozrqyC9Qluotr2Sra8pOtEtewMkgBrBLXsC9QgX3iGm4EKnBDXOP7QAXeiWt4G6jAW3ENNwMVuCmu4UCgAgc6/DCqE1miO9+7X0oEgtVlF1gjPkiOKHs5Pbx9b2jme7SlxPmSC5we20v8kRjJh6Vt6jlU/JKZztsBj1XcH2zxGG3h4ERqkPgp0R35AhvMOuQT3cVnyRH/O9wt4zjLzaj00/F6/dfj9WrPj9eVUkqpRPeMMTnMxxbu4fWf5uP3uME93IZ5JpcxHi4lzGjWYgPPsom2cNDIs9jAWjNaXJvaw1RyES/SlpmLXGQqHb0Rgsv5hjaEvOJyIt6lWg4nacMNTppcHMu9LqYGL2ijCZ6bGuki0TEVuEIbbXDFVEgU2JsbaWPKRvYOf6C8SBtjLoY6yKbH4h5tvMHd5DgJR6Ivb9E6yK1EX6c3AMGDlRIcZtG6i5ktQWGpywJYKkHxgtMC5yUo1tM6TL0ERes2WkALaAEtEEm0gFJKKaWUUkp9ABvn3SEbw3cFAAAAAElFTkSuQmCC";
 
+// pixie dust sparkle icon for bot messages
+const defaultBotAvatar =
+	"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='%230C3985'%3E%3Cpath d='M8.32 6.72 10.4 5.6c.16 0 .16-.16.16-.32s-.16-.32-.16-.32L8.32 3.84c-.64-.32-1.28-.8-1.6-1.44L5.76.16C5.6.16 5.44 0 5.28 0s-.32.16-.32.16L3.84 2.4q-.48.96-1.44 1.44L.16 4.96S0 5.12 0 5.28s.16.32.16.32l2.08 1.12q.96.48 1.44 1.44l1.12 2.08c0 .16.16.16.32.16s.32-.16.32-.16l1.12-2.08c.48-.48 1.12-1.12 1.76-1.44m23.2 12-4.96-2.56c-1.44-.8-2.72-1.92-3.52-3.52l-2.56-4.96c-.16-.32-.48-.48-.8-.48s-.64.16-.8.48l-2.56 4.96c-.8 1.44-1.92 2.72-3.52 3.52l-4.96 2.56c-.32.16-.48.48-.48.8s.16.64.48.8l4.96 2.56c1.44.8 2.72 1.92 3.52 3.52l2.56 4.96c.16.32.48.48.8.48s.64-.16.8-.48l2.56-4.96c.8-1.44 1.92-2.72 3.52-3.52l4.96-2.56c.32-.16.48-.48.48-.8s-.16-.64-.48-.8'/%3E%3C/svg%3E";
+
 export interface ISendMessageOptions {
 	/** overrides the displayed text within a chat bubble. useful for e.g. buttons */
 	label: string;
@@ -64,7 +68,7 @@ export const getAvatarForMessage = (message: IMessage, state: StoreState) => {
 				(state.config.settings.layout.useOtherAgentLogo &&
 					state.config.settings.layout.botLogoUrl) ||
 				state.config.settings.layout.logoUrl ||
-				undefined
+				defaultBotAvatar
 			);
 		case "user":
 			return;

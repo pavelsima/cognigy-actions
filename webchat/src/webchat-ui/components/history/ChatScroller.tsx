@@ -15,8 +15,23 @@ const ChatLogWrapper = styled.div<IChatLogWrapperProps>(({ theme }) => props => 
 	flexGrow: 1,
 	minHeight: 0,
 	height: theme.blockSize,
-	outline: props.showFocusOutline ? `2px auto ${theme.primaryColorFocus}` : "none",
+	outline: "none",
 	outlineOffset: -1,
+	position: "relative",
+	// CXone: Scroll fadeout at top
+	"&::before": {
+		content: '""',
+		position: "sticky",
+		top: 0,
+		left: 0,
+		right: 0,
+		height: "40px",
+		background: `linear-gradient(to bottom, ${theme.backgroundWebchat || '#FFFFFF'} 0%, transparent 100%)`,
+		pointerEvents: "none",
+		zIndex: 1,
+		display: "block",
+		marginBottom: "-40px",
+	},
 }));
 
 const ChatLog = styled.div(({ theme }) => ({

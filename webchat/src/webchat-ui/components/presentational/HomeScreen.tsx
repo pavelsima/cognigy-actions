@@ -1,17 +1,14 @@
-import React, { RefObject, useEffect, useRef } from "react";
+import React, { RefObject, useEffect, useRef, useState } from "react";
 import styled from "@emotion/styled";
 import CloseIcon from "../../assets/close-16px.svg";
-import { IWebchatConfig, IWebchatSettings } from "../../../common/interfaces/webchat-config";
-import PrimaryButton from "./PrimaryButton";
-import SecondaryButton from "./SecondaryButton";
+import PixieDustIcon from "../../../assets/icons/pixie_dust.svg";
+import SendIconSvg from "../../../assets/icons/send.svg";
+import { IWebchatConfig } from "../../../common/interfaces/webchat-config";
 import IconButton from "./IconButton";
 import Branding from "../branding/Branding";
 import Notifications from "./Notifications";
-import { ActionButtons, Typography } from "@cognigy/chat-components";
 import { WebchatUIProps } from "../WebchatUI";
 import { IWebchatButton } from "@cognigy/socket-client";
-import CognigyAIAvatar from "../../assets/cognigy-ai-avatar-28px.svg";
-import { Logo } from "./Header";
 import getKeyboardFocusableElements from "../../utils/find-focusable";
 
 const HomeScreenRoot = styled.div(({ theme }) => ({
@@ -25,133 +22,242 @@ const HomeScreenRoot = styled.div(({ theme }) => ({
 	fontSize: 16,
 	fontWeight: 700,
 	boxSizing: "border-box",
+	backgroundColor: "#FFFFFF",
 
 	"& *": {
 		boxSizing: "border-box",
 	},
-
-	"&.hidebackground-enter-done": {
-		"& .webchat-homescreen-content": {
-			backgroundImage: "none",
-		},
-	},
-}));
-
-interface IHomeScreenContentProps {
-	settings: IWebchatSettings;
-}
-
-const HomeScreenContent = styled.div<IHomeScreenContentProps>(({ theme, settings }) => {
-	const backgroundColor = settings?.homeScreen?.background?.color || theme.backgroundHome;
-
-	let backgroundImage = "none";
-	const backgroundImageURL = settings?.homeScreen?.background?.imageUrl;
-	if (backgroundImageURL) backgroundImage = `url("${backgroundImageURL}")`;
-
-	const background = `${backgroundImage}, ${backgroundColor}`;
-
-	return {
-		background,
-		backgroundSize: "cover",
-		backgroundPosition: "center center",
-		flexGrow: 1,
-		display: "flex",
-		flexDirection: "column",
-		alignItems: "flex-start",
-		justifyContent: "flex-start",
-		height: "100%",
-		width: "100%",
-		padding: "20px 20px 35px 20px",
-	};
-});
-
-const FullWidthContainer = styled.div(() => ({
-	marginInline: -20,
-	width: "calc(100% + 40px)",
 }));
 
 const HomeScreenHeader = styled.div({
 	display: "flex",
 	flexDirection: "row",
 	alignItems: "center",
-	justifyContent: "space-between",
+	justifyContent: "flex-end",
 	width: "100%",
-	marginBottom: 20,
-	height: 28,
-	"& .webchat-homescreen-header-logo": {
-		borderRadius: "50%",
-		width: 28,
-		height: 28,
-	},
-	"& .webchat-homescreen-header-cognigy-logo": {
-		borderRadius: "50%",
-		width: 28,
-		height: 28,
-	},
+	padding: "12px 16px",
+	borderBottom: "1px solid #E5E7EB",
 });
 
 const HomeScreenHeaderIconButton = styled(IconButton)(({ theme }) => ({
-	color: theme.white,
+	color: "#6B7280",
 	borderRadius: 4,
-	padding: 0,
-	margin: 4,
+	padding: 4,
 	svg: {
-		fill: theme.white,
+		fill: "#6B7280",
 		width: 16,
 		height: 16,
 	},
-	"&.active, &:hover": {
-		color: theme.white,
-		fill: theme.white,
+	"&:hover": {
+		backgroundColor: "#F3F4F6",
 	},
 	"&:focus-visible": {
-		outline: `2px solid ${theme.primaryColorFocus}`,
+		outline: `2px solid ${theme.primaryColor}`,
 		outlineOffset: 2,
-		boxShadow: `0 0 0 4px ${theme.white}`,
 	},
 }));
 
-const HomeScreenTitle = styled(Typography)(({ theme }) => ({
-	color: theme.textLight,
-	fontWeight: 700,
+const HomeScreenContent = styled.div({
+	flexGrow: 1,
+	display: "flex",
+	flexDirection: "column",
+	alignItems: "center",
+	padding: "40px 24px 24px 24px",
+	overflowY: "auto",
+});
+
+// CXone: Centered welcome section wrapper
+const WelcomeSection = styled.div({
+	flex: 1,
+	display: "flex",
+	flexDirection: "column",
+	alignItems: "center",
+	justifyContent: "center",
+});
+
+const IconWrapper = styled.div({
+	marginBottom: 24,
+});
+
+const WelcomeTitle = styled.h2({
+	fontSize: 24,
+	fontWeight: 600,
+	color: "#1F2937",
 	margin: 0,
+	marginBottom: 8,
+	textAlign: "center",
+});
+
+const WelcomeSubtitle = styled.p({
+	fontSize: 16,
+	fontWeight: 400,
+	color: "#6B7280",
+	margin: 0,
+	marginBottom: 32,
+	textAlign: "center",
+});
+
+const SuggestionsSection = styled.div({
+	width: "100%",
+	maxWidth: 500,
+});
+
+const SuggestionsLabel = styled.p({
+	fontSize: 14,
+	fontWeight: 400,
+	color: "#6B7280",
+	margin: 0,
+	marginBottom: 16,
+});
+
+const SuggestionCard = styled.button(({ theme }) => ({
+	display: "block",
+	width: "100%",
+	padding: "14px 16px",
+	marginBottom: 12,
+	backgroundColor: "#FFFFFF",
+	border: "1px solid #D1D5DB",
+	borderRadius: 8,
+	textAlign: "left",
+	fontSize: 14,
+	fontWeight: 400,
+	color: "#1F2937",
+	cursor: "pointer",
+	transition: "border-color 0.2s, background-color 0.2s",
+	overflow: "hidden",
+	textOverflow: "ellipsis",
+	whiteSpace: "nowrap",
+
+	"&:hover": {
+		borderColor: theme.primaryColor || "#0C3985",
+		backgroundColor: "#F9FAFB",
+	},
+
+	"&:focus-visible": {
+		outline: `2px solid ${theme.primaryColor || "#0C3985"}`,
+		outlineOffset: 2,
+	},
 }));
 
-const HomeScreenButtons = styled.div({
-	marginTop: "auto",
-	"> div": {
-		flexDirection: "column",
+const FullWidthContainer = styled.div(() => ({
+	width: "100%",
+	maxWidth: 500,
+}));
+
+const InputSection = styled.div({
+	padding: "16px 24px",
+	borderTop: "1px solid #E5E7EB",
+	backgroundColor: "#FFFFFF",
+});
+
+// CXone: Form container for input + send button
+const InputFormContainer = styled.div({
+	display: "flex",
+	alignItems: "center",
+	gap: 8,
+});
+
+// CXone: Bordered input field container with pixie dust icon (matches BaseInput)
+const InputWrapper = styled.div(({ theme }) => ({
+	display: "flex",
+	alignItems: "center",
+	flex: 1,
+	padding: "8px 12px",
+	border: "1px solid #D1D5DB",
+	borderRadius: 8,
+	backgroundColor: "#FFFFFF",
+	transition: "border-color 0.2s",
+	gap: 8,
+
+	"&:focus-within": {
+		borderColor: theme.primaryColor || "#0C3985",
+	},
+}));
+
+const StyledInput = styled.input({
+	flex: 1,
+	border: "none",
+	outline: "none",
+	fontSize: 14,
+	color: "#1F2937",
+	backgroundColor: "transparent",
+
+	"&::placeholder": {
+		color: "#9CA3AF",
 	},
 });
 
-const HomeScreenActions = styled.div(({ theme }) => ({
-	alignSelf: "flex-end",
+const SparkleButton = styled.button(({ theme }) => ({
+	background: "none",
+	border: "none",
+	padding: 4,
+	cursor: "pointer",
 	display: "flex",
-	flexDirection: "column",
-	alignItems: " center",
+	alignItems: "center",
 	justifyContent: "center",
-	width: "100%",
-	padding: "20px 20px 12px 20px",
-	backgroundColor: theme.white,
-}));
+	color: theme.primaryColor || "#0C3985",
+	flexShrink: 0,
 
-const StartButton = styled(PrimaryButton)(({ theme }) => ({
-	marginBottom: 16,
-	flexGrow: 1,
-	"&:focus-visible": {
-		outline: `2px solid ${theme.primaryColorFocus}`,
-		outlineOffset: 2,
+	"&:hover": {
+		color: "#2563EB",
+	},
+
+	svg: {
+		width: 20,
+		height: 20,
 	},
 }));
 
-const PrevConversationsButton = styled(SecondaryButton)(({ theme }) => ({
-	marginBottom: 24,
-	flexGrow: 1,
-	"&:focus-visible": {
-		outline: `2px solid ${theme.primaryColorFocus}`,
-		outlineOffset: 2,
+// CXone: Send button in separate bordered box (matches BaseInput)
+const SendButton = styled.button(({ theme }) => ({
+	display: "flex",
+	alignItems: "center",
+	justifyContent: "center",
+	width: 44,
+	height: 44,
+	padding: 0,
+	border: "1px solid #D1D5DB",
+	borderRadius: 8,
+	backgroundColor: "#FFFFFF",
+	cursor: "pointer",
+	transition: "all 0.2s",
+	flexShrink: 0,
+	color: "#9CA3AF",
+
+	"&:hover:not(:disabled)": {
+		borderColor: theme.primaryColor || "#0C3985",
+		color: theme.primaryColor || "#0C3985",
+	},
+
+	"&:disabled": {
+		cursor: "not-allowed",
+		color: "#D1D5DB",
+	},
+
+	svg: {
+		width: 16,
+		height: 16,
 	},
 }));
+
+// Styled pixie dust icon for header
+const StyledPixieDustIcon = styled(PixieDustIcon)({
+	width: 48,
+	height: 48,
+	color: "#0C3985",
+});
+
+// Styled pixie dust icon for input (smaller)
+const SmallPixieDustIcon = styled(PixieDustIcon)({
+	width: 20,
+	height: 20,
+});
+
+// Styled send icon
+const StyledSendIcon = styled(SendIconSvg)({
+	width: 16,
+	height: 16,
+});
 
 interface IHomeScreenProps {
 	config: IWebchatConfig;
@@ -170,8 +276,6 @@ export const HomeScreen: React.FC<IHomeScreenProps> = props => {
 		config,
 		showHomeScreen,
 		closeButtonRef,
-		onSetShowHomeScreen,
-		onSetShowPrevConversations,
 		onClose,
 		onEmitAnalytics,
 		onSendActionButtonMessage,
@@ -179,15 +283,14 @@ export const HomeScreen: React.FC<IHomeScreenProps> = props => {
 	} = props;
 
 	const homeScreenRef = useRef<HTMLDivElement>(null);
+	const inputRef = useRef<HTMLInputElement>(null);
+	const [inputValue, setInputValue] = useState("");
 
 	const { homeScreen } = config.settings;
-
 	const buttons: IWebchatButton[] = config.settings.homeScreen.conversationStarters.starters;
 
-	const handleShowPrevConversations = () => {
-		onSetShowHomeScreen(false);
-		onSetShowPrevConversations(true);
-	};
+	// Extract user name from welcome text or use default
+	const welcomeText = homeScreen.welcomeText || "Welcome";
 
 	useEffect(() => {
 		if (homeScreenRef.current) {
@@ -196,7 +299,6 @@ export const HomeScreen: React.FC<IHomeScreenProps> = props => {
 		}
 	}, []);
 
-	// Get all focusable elemnents inside homeScreen root and set tabindex to -1, if the homescreen is visually hidden
 	useEffect(() => {
 		const tabIndex = showHomeScreen ? 0 : -1;
 
@@ -209,6 +311,29 @@ export const HomeScreen: React.FC<IHomeScreenProps> = props => {
 		}
 	}, [showHomeScreen]);
 
+	const handleSuggestionClick = (button: IWebchatButton) => {
+		if (button.type === "postback" && button.payload) {
+			onSendActionButtonMessage(button.payload, undefined, { label: button.title });
+		} else if (button.type === "web_url" && button.url) {
+			window.open(button.url, "_blank");
+		}
+		onEmitAnalytics("action-button-click", button);
+	};
+
+	const handleInputSubmit = () => {
+		if (inputValue.trim()) {
+			onSendActionButtonMessage(inputValue.trim(), undefined, { label: inputValue.trim() });
+			setInputValue("");
+		}
+	};
+
+	const handleKeyDown = (e: React.KeyboardEvent) => {
+		if (e.key === "Enter" && !e.shiftKey) {
+			e.preventDefault();
+			handleInputSubmit();
+		}
+	};
+
 	return (
 		<HomeScreenRoot
 			className="webchat-homescreen-root"
@@ -219,85 +344,96 @@ export const HomeScreen: React.FC<IHomeScreenProps> = props => {
 				{config.settings.customTranslations?.ariaLabels?.homeScreen ??
 					"Chat window home screen"}
 			</h2>
-			<HomeScreenContent className="webchat-homescreen-content" settings={config?.settings}>
-				<HomeScreenHeader className="webchat-homescreen-header">
-					{config?.settings?.layout?.logoUrl ? (
-						<Logo
-							src={config?.settings?.layout?.logoUrl}
-							className={"webchat-homescreen-header-logo"}
-							alt=""
-						/>
-					) : (
-						<CognigyAIAvatar
-							className={"webchat-homescreen-header-cognigy-logo"}
-							role="img"
-							title="Cognigy.AI Logo"
-						/>
-					)}
-					<HomeScreenHeaderIconButton
-						ref={closeButtonRef}
-						onClick={onClose}
-						className="webchat-homescreen-close-button"
-						aria-label={
-							config.settings.customTranslations?.ariaLabels?.closeChat ??
-							"Close chat"
-						}
-						color="primary"
-					>
-						<CloseIcon />
-					</HomeScreenHeaderIconButton>
-				</HomeScreenHeader>
+
+			<HomeScreenHeader className="webchat-homescreen-header">
+				<HomeScreenHeaderIconButton
+					ref={closeButtonRef}
+					onClick={onClose}
+					className="webchat-homescreen-close-button"
+					aria-label={
+						config.settings.customTranslations?.ariaLabels?.closeChat ??
+						"Close chat"
+					}
+					color="primary"
+				>
+					<CloseIcon />
+				</HomeScreenHeaderIconButton>
+			</HomeScreenHeader>
+
+			<HomeScreenContent className="webchat-homescreen-content">
 				<FullWidthContainer>
 					<Notifications />
 				</FullWidthContainer>
-				<HomeScreenTitle
-					variant="title1-semibold"
-					component="h3"
-					className="webchat-homescreen-title"
-					id="webchatHeaderTitle"
-				>
-					{homeScreen.welcomeText || "Welcome to the Cognigy Webchat"}
-				</HomeScreenTitle>
-				{homeScreen?.conversationStarters?.enabled && (
-					<HomeScreenButtons className="webchat-homescreen-buttons">
-						<ActionButtons
-							size="large"
-							showUrlIcon
-							buttonClassName="webchat-homescreen-button"
-							containerClassName="webchat-homescreen-button-container"
-							payload={buttons}
-							config={config}
-							action={showHomeScreen ? onSendActionButtonMessage : undefined}
-							onEmitAnalytics={onEmitAnalytics}
-						/>
-					</HomeScreenButtons>
+
+				<WelcomeSection className="webchat-homescreen-welcome-section">
+					<IconWrapper>
+						<StyledPixieDustIcon />
+					</IconWrapper>
+
+					<WelcomeTitle className="webchat-homescreen-title">
+						{welcomeText}
+					</WelcomeTitle>
+
+					<WelcomeSubtitle className="webchat-homescreen-subtitle">
+						{homeScreen.subtitle || "How can I help you Today?"}
+					</WelcomeSubtitle>
+				</WelcomeSection>
+
+				{homeScreen?.conversationStarters?.enabled && buttons.length > 0 && (
+					<SuggestionsSection className="webchat-homescreen-suggestions">
+						<SuggestionsLabel>
+							{homeScreen.suggestionsLabel || "Here are some things Copilot can help you do:"}
+						</SuggestionsLabel>
+						{buttons.map((button, index) => (
+							<SuggestionCard
+								key={index}
+								onClick={() => handleSuggestionClick(button)}
+								className="webchat-homescreen-suggestion-card"
+								title={button.title}
+							>
+								{button.title}
+							</SuggestionCard>
+						))}
+					</SuggestionsSection>
 				)}
 			</HomeScreenContent>
-			<HomeScreenActions className="webchat-homescreen-actions">
-				<StartButton
-					onClick={onStartConversation}
-					className="webchat-homescreen-send-button"
-					data-test="webchat-start-chat-button"
-				>
-					{config.settings.homeScreen.startConversationButtonText || "Start conversation"}
-				</StartButton>
-				{config.settings.homeScreen.previousConversations.enabled && (
-					<PrevConversationsButton
-						onClick={handleShowPrevConversations}
-						className="webchat-homescreen-previous-conversation-button"
+
+			<InputSection className="webchat-homescreen-input-section">
+				<InputFormContainer>
+					<InputWrapper>
+						<StyledInput
+							ref={inputRef}
+							type="text"
+							placeholder={homeScreen.inputPlaceholder || "Ask a question or request..."}
+							value={inputValue}
+							onChange={(e) => setInputValue(e.target.value)}
+							onKeyDown={handleKeyDown}
+							aria-label="Message input"
+						/>
+						<SparkleButton type="button" aria-label="AI Assistant">
+							<SmallPixieDustIcon />
+						</SparkleButton>
+					</InputWrapper>
+					<SendButton
+						type="button"
+						onClick={handleInputSubmit}
+						disabled={!inputValue.trim()}
+						aria-label="Send message"
 					>
-						{config.settings.homeScreen.previousConversations.buttonText ||
-							"Previous conversations"}
-					</PrevConversationsButton>
-				)}
+						<StyledSendIcon />
+					</SendButton>
+				</InputFormContainer>
+
 				{/* Branding Logo Link */}
-				<Branding
-					id="cognigyHomeScreenBranding"
-					watermark={config?.settings?.layout?.watermark}
-					watermarkText={config?.settings?.layout?.watermarkText}
-					watermarkUrl={config?.settings?.layout?.watermarkUrl}
-				/>
-			</HomeScreenActions>
+				<div style={{ marginTop: 12, display: "flex", justifyContent: "center" }}>
+					<Branding
+						id="cognigyHomeScreenBranding"
+						watermark={config?.settings?.layout?.watermark}
+						watermarkText={config?.settings?.layout?.watermarkText}
+						watermarkUrl={config?.settings?.layout?.watermarkUrl}
+					/>
+				</div>
+			</InputSection>
 		</HomeScreenRoot>
 	);
 };

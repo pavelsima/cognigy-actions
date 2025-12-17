@@ -8,7 +8,7 @@ import MenuIcon from "../../assets/menu-16px.svg";
 import Notifications from "./Notifications";
 import classnames from "classnames";
 import { Typography } from "@cognigy/chat-components";
-import CognigyAIAvatar from "../../assets/cognigy-ai-avatar-28px.svg";
+import CognigyAIAvatar from "../../../assets/icons/pixie_dust.svg";
 import { getAccessiblePrimaryVariant, getContrastColor } from "../../style";
 import DeleteIcon from "../../assets/bin-16px.svg";
 import { useSelector } from "../../../webchat/helper/useSelector";
@@ -167,28 +167,6 @@ const Header: FC<HeaderProps> = props => {
 					</BackButtonWrapper>
 				)}
 				<div className={classnames("webchat-header-logo-name-container")}>
-					{showChatScreen &&
-						(logoUrl ? (
-							<Logo
-								src={logoUrl}
-								className={classnames("webchat-header-logo")}
-								alt=""
-							/>
-						) : (
-							<CognigyAIAvatar
-								title="Cognigy.AI Logo"
-								role="img"
-								className={classnames("webchat-header-cognigy-logo")}
-							/>
-						))}
-					<Typography
-						variant="h2-semibold"
-						id="webchatHeaderTitle"
-						className="webchat-header-title"
-						margin={0}
-					>
-						{title}
-					</Typography>
 				</div>
 				<HeaderIconsWrapper>
 					{rest.isDeleteAllConversationsButtonVisible && (

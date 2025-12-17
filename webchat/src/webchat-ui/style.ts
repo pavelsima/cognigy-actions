@@ -221,8 +221,8 @@ export const createWebchatTheme = (theme: Partial<IWebchatTheme> = {}): IWebchat
 			"radial-gradient(at right 95.79%, hsl(225, 80%, 32%) 0%, #2455E6 34.37%, hsl(225, 80%, 72%) 68.23%, hsl(225, 79%, 92%) 100%)";
 	}
 	const backgroundWebchat = "#FFFFFF";
-	const backgroundBotMessage = "#FFFFFF";
-	const backgroundUserMessage = "#E8EBFF";
+	const backgroundBotMessage = "#F2F2F2"; // CXone: grey for AI responses
+	const backgroundUserMessage = "#FFFFFF"; // CXone: white for user questions
 	const backgroundEngagementMessage = "#FFFFFF";
 
 	const textLink = "#6688ED";

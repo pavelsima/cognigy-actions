@@ -219,6 +219,12 @@ export interface IWebchatSettings {
 	homeScreen: {
 		enabled: boolean;
 		welcomeText: string;
+		/** Subtitle below welcome text */
+		subtitle?: string;
+		/** Label above suggestion cards */
+		suggestionsLabel?: string;
+		/** Placeholder for input field */
+		inputPlaceholder?: string;
 		background: {
 			imageUrl: string;
 			color: string;

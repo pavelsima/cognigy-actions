@@ -4,7 +4,7 @@ import { ActionButtons, Typography } from "@cognigy/chat-components";
 import UnreadMessagePreview from "./UnreadMessagePreview";
 import IconButton from "./IconButton";
 import CloseIcon from "../../assets/close-16px.svg";
-import CognigyAIAvatar from "../../assets/cognigy-ai-avatar-28px.svg";
+import CognigyAIAvatar from "../../../assets/icons/pixie_dust.svg";
 import { IWebchatButton } from "@cognigy/socket-client";
 import { WebchatUIProps } from "../WebchatUI";
 import { IWebchatConfig } from "../../../common/interfaces/webchat-config";

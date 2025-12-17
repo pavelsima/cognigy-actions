@@ -134,6 +134,222 @@
 	border-bottom: none !important;
 }
 
+/* ============================================
+   CXone Message Styling
+   ============================================ */
+
+/* User message - white background with border */
+[data-cognigy-webchat-root] .cc-message-row--right .cc-message-bubble,
+[data-cognigy-webchat-root] .chat-bubble._outgoing_jbjrn_40,
+[data-cognigy-webchat-root] ._bubble_jbjrn_1._outgoing_jbjrn_40 {
+	background-color: #FFFFFF !important;
+	border: 1px solid #D2D8DB !important;
+	border-radius: 12px !important;
+	padding: 12px 16px !important;
+	box-shadow: none !important;
+}
+
+[data-cognigy-webchat-root] .cc-message-row--right .cc-message-bubble p,
+[data-cognigy-webchat-root] .cc-message-row--right .cc-message-bubble span,
+[data-cognigy-webchat-root] .chat-bubble._outgoing_jbjrn_40 p,
+[data-cognigy-webchat-root] .chat-bubble._outgoing_jbjrn_40 span {
+	color: #1F2937 !important;
+}
+
+/* Hide AI Agent notice */
+[data-cognigy-webchat-root] .webchat-log-ai-agent-notice-text {
+	display: none !important;
+}
+
+/* Remove outline from focused elements */
+[data-cognigy-webchat-root] .cognigy-webchat-lx7tod,
+[data-cognigy-webchat-root] .cognigy-webchat-lx7tod:focus,
+[data-cognigy-webchat-root] .cognigy-webchat-lx7tod:focus-visible,
+[data-cognigy-webchat-root] .webchatChatHistory,
+[data-cognigy-webchat-root] .webchatChatHistory:focus,
+[data-cognigy-webchat-root] .webchatChatHistory:focus-visible,
+[data-cognigy-webchat-root] [class*="webchatChatHistory"],
+[data-cognigy-webchat-root] [class*="webchatChatHistory"]:focus,
+[data-cognigy-webchat-root] [class*="webchatChatHistory"]:focus-visible {
+	outline: none !important;
+	box-shadow: none !important;
+}
+
+.webchat-chat-history article {
+  max-width: 80% !important;
+}
+
+.webchat-chat-history article.user {
+  justify-self: end;
+}
+
+/* Bot message container - light gray background with border */
+[data-cognigy-webchat-root] .cc-message-row--left .cc-message-bubble,
+[data-cognigy-webchat-root] .webchat-message-row.bot .cc-message-bubble,
+[data-cognigy-webchat-root] [class*="webchat-message-row"][class*="bot"] [class*="_bubble"],
+[data-cognigy-webchat-root] .chat-bubble._incoming_jbjrn_27,
+[data-cognigy-webchat-root] ._bubble_jbjrn_1._incoming_jbjrn_27 {
+	background-color: #F5F8FA !important;
+	border: 1px solid #D2D8DB;
+	border-radius: 12px !important;
+	padding: 12px 16px !important;
+	box-shadow: none !important;
+	max-width: 100% !important;
+}
+
+/* Bot avatar - replace with pixie dust icon */
+[data-cognigy-webchat-root] .cc-message-row--left .cc-avatar,
+[data-cognigy-webchat-root] .webchat-message-row.bot .webchat-avatar,
+[data-cognigy-webchat-root] [class*="webchat-message-row"][class*="bot"] [class*="avatar"],
+[data-cognigy-webchat-root] [class*="_avatar"] {
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='%230C3985'%3E%3Cpath d='M8.32 6.72 10.4 5.6c.16 0 .16-.16.16-.32s-.16-.32-.16-.32L8.32 3.84c-.64-.32-1.28-.8-1.6-1.44L5.76.16C5.6.16 5.44 0 5.28 0s-.32.16-.32.16L3.84 2.4q-.48.96-1.44 1.44L.16 4.96S0 5.12 0 5.28s.16.32.16.32l2.08 1.12q.96.48 1.44 1.44l1.12 2.08c0 .16.16.16.32.16s.32-.16.32-.16l1.12-2.08c.48-.48 1.12-1.12 1.76-1.44m23.2 12-4.96-2.56c-1.44-.8-2.72-1.92-3.52-3.52l-2.56-4.96c-.16-.32-.48-.48-.8-.48s-.64.16-.8.48l-2.56 4.96c-.8 1.44-1.92 2.72-3.52 3.52l-4.96 2.56c-.32.16-.48.48-.48.8s.16.64.48.8l4.96 2.56c1.44.8 2.72 1.92 3.52 3.52l2.56 4.96c.16.32.48.48.8.48s.64-.16.8-.48l2.56-4.96c.8-1.44 1.92-2.72 3.52-3.52l4.96-2.56c.32-.16.48-.48.48-.8s-.16-.64-.48-.8'/%3E%3C/svg%3E") !important;
+	background-size: 60% !important;
+	background-position: center !important;
+	background-repeat: no-repeat !important;
+	background-color: #F3F4F6 !important;
+	border-radius: 50% !important;
+}
+
+/* Hide the actual image inside avatar */
+[data-cognigy-webchat-root] .cc-message-row--left .cc-avatar img,
+[data-cognigy-webchat-root] [class*="_avatar"] img {
+	opacity: 0 !important;
+}
+
+/* Bot message text styling */
+[data-cognigy-webchat-root] .cc-message-row--left .cc-message-bubble p,
+[data-cognigy-webchat-root] .cc-message-row--left .cc-message-bubble li,
+[data-cognigy-webchat-root] .cc-message-row--left .cc-message-bubble span {
+	color: #1F2937 !important;
+	font-size: 14px !important;
+	line-height: 1.6 !important;
+}
+
+/* Bot message bold text */
+[data-cognigy-webchat-root] .cc-message-row--left .cc-message-bubble strong,
+[data-cognigy-webchat-root] .cc-message-row--left .cc-message-bubble b {
+	font-weight: 600 !important;
+	color: #111827 !important;
+}
+
+/* Bot message ordered/unordered lists */
+[data-cognigy-webchat-root] .cc-message-row--left .cc-message-bubble ol,
+[data-cognigy-webchat-root] .cc-message-row--left .cc-message-bubble ul {
+	padding-left: 20px !important;
+	margin: 8px 0 !important;
+}
+
+[data-cognigy-webchat-root] .cc-message-row--left .cc-message-bubble li {
+	margin-bottom: 12px !important;
+}
+
+/* ============================================
+   Quick Reply / Action Buttons Styling
+   ============================================ */
+
+/* Hide the button image container entirely */
+[data-cognigy-webchat-root] [class*="_buttonImageContainer"],
+[data-cognigy-webchat-root] [class*="buttonImageContainer"] {
+	display: none !important;
+}
+
+/* Quick reply template container - wrap everything in one box */
+[data-cognigy-webchat-root] .webchat-quick-reply-template-root {
+	background-color: #F5F8FA !important;
+	border: 1px solid #D2D8DB !important;
+	border-radius: 12px !important;
+	padding: 12px 16px !important;
+	margin: 0 !important;
+}
+
+/* Remove all borders/backgrounds from elements inside the quick reply container */
+[data-cognigy-webchat-root] .webchat-quick-reply-template-root > *,
+[data-cognigy-webchat-root] .webchat-quick-reply-template-root [class*="_bubble"],
+[data-cognigy-webchat-root] .webchat-quick-reply-template-root [class*="bubble"],
+[data-cognigy-webchat-root] .webchat-quick-reply-template-root [class*="_root"],
+[data-cognigy-webchat-root] .webchat-quick-reply-template-root [class*="_container"] {
+	border: none !important;
+	background: transparent !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	box-shadow: none !important;
+}
+
+/* Button wrapper elements - remove their styling, display inline */
+[data-cognigy-webchat-root] .webchat-quick-reply-template-root [class*="_buttonRoot"],
+[data-cognigy-webchat-root] .webchat-quick-reply-template-root [class*="buttonRoot"],
+[data-cognigy-webchat-root] .webchat-quick-reply-template-root [class*="_actionButton"],
+[data-cognigy-webchat-root] .webchat-quick-reply-template-root [class*="actionButton"] {
+	border: none !important;
+	background: transparent !important;
+	padding: 0 !important;
+	margin: 4px !important;
+	box-shadow: none !important;
+	display: inline-block !important;
+}
+
+/* Buttons container - flex layout */
+[data-cognigy-webchat-root] .webchat-quick-reply-template-root [class*="_buttonsContainer"],
+[data-cognigy-webchat-root] .webchat-quick-reply-template-root [class*="buttonsContainer"],
+[data-cognigy-webchat-root] .webchat-quick-reply-template-root [class*="_buttons_"],
+[data-cognigy-webchat-root] .webchat-quick-reply-template-root > div:last-child {
+	display: flex !important;
+	flex-wrap: wrap !important;
+	gap: 8px !important;
+	margin-top: 24px !important;
+	background: transparent !important;
+}
+
+/* All action/quick reply buttons - outlined style, no icons */
+[data-cognigy-webchat-root] .webchat-quick-reply-template-root button {
+	background-color: transparent !important;
+	border: 1px solid #D1D5DB !important;
+	border-radius: 20px !important;
+	padding: 8px 16px !important;
+	font-size: 14px !important;
+	font-weight: 500 !important;
+	color: #374151 !important;
+	cursor: pointer !important;
+	transition: all 0.2s ease !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	box-shadow: none !important;
+}
+
+/* Hide icons/images inside buttons */
+[data-cognigy-webchat-root] .webchat-quick-reply-template-root button img,
+[data-cognigy-webchat-root] .webchat-quick-reply-template-root button svg,
+[data-cognigy-webchat-root] .webchat-quick-reply-template-root button [class*="icon"] {
+	display: none !important;
+}
+
+/* Button hover state */
+[data-cognigy-webchat-root] .webchat-quick-reply-template-root button:hover {
+	border-color: #0C3985 !important;
+	background-color: rgba(12, 57, 133, 0.05) !important;
+	color: #0C3985 !important;
+}
+
+/* Button focus state */
+[data-cognigy-webchat-root] .webchat-quick-reply-template-root button:focus {
+	outline: 2px solid #0C3985 !important;
+	outline-offset: 2px !important;
+}
+
+/* General action buttons outside quick reply */
+[data-cognigy-webchat-root] .cc-action-buttons button,
+[data-cognigy-webchat-root] .cc-quick-reply-button {
+	background-color: transparent !important;
+	border: 1px solid #D1D5DB !important;
+	border-radius: 20px !important;
+	padding: 8px 16px !important;
+	font-size: 14px !important;
+	font-weight: 500 !important;
+	color: #374151 !important;
+}
+
+
 /* Override media queries for embedded mode */
 @media screen and (min-width: 576px) {
 	[data-cognigy-webchat-root].webchat-embedded-mode {
