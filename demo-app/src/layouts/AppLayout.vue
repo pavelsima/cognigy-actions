@@ -1,119 +1,91 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, nextTick, watch } from 'vue'
+import { ref, nextTick } from 'vue'
 import { RouterLink } from 'vue-router'
-import { useCognigyWebchat } from '@/composables/useCognigyWebchat'
-import { useCustomChat } from '@/composables/useCustomChat'
 import { useCXoneWebchat } from '@/composables/useCXoneWebchat'
-import CustomChatModal from '@/components/CustomChatModal.vue'
 
-const { status, init, open } = useCognigyWebchat()
-const { open: openCustomChat } = useCustomChat()
-const { init: initCXone } = useCXoneWebchat()
+const {
+  status,
+  init,
+  open,
+  close,
+  toggle,
+  sendMessage,
+  showNotification,
+  startConversation,
+  endSession,
+} = useCXoneWebchat()
 
-const isChatReady = computed(() => status.value === 'ready')
 const isSidebarOpen = ref(false)
 const cxoneInitialized = ref(false)
 
-// Load token from localStorage on mount
-const STORAGE_KEY = 'cxoneToken'
-const cxoneToken = ref(localStorage.getItem(STORAGE_KEY) || '')
-
-// Save token to localStorage whenever it changes
-watch(cxoneToken, (newValue) => {
-  if (newValue) {
-    localStorage.setItem(STORAGE_KEY, newValue)
-  } else {
-    localStorage.removeItem(STORAGE_KEY)
-  }
-})
-
 const tabs = [
-  { label: 'Insights', to: '/insights' },
-  { label: 'Email', to: '/email' },
-  { label: 'Knowledge Article', to: '/knowledge' },
   { label: 'API Docs', to: '/docs' },
+  { label: 'Vue Example', to: '/vue-example' },
+  { label: 'React Example', to: '/react-example' },
 ]
-
-onMounted(() => {
-  void init()
-})
-
-const handleOpenChat = () => {
-  open()
-}
-
-const handleOpenCustomChat = () => {
-  openCustomChat()
-}
 
 const closeSidebar = () => {
   isSidebarOpen.value = false
 }
 
-const handleToggleCXoneChat = async () => {
+const handleToggleChat = async () => {
   isSidebarOpen.value = !isSidebarOpen.value
 
-  // Initialize CXone chat on first open (after container is visible)
   if (isSidebarOpen.value && !cxoneInitialized.value) {
     cxoneInitialized.value = true
-    await nextTick() // Wait for DOM to update
-    void initCXone({
+    await nextTick()
+    void init({
       container: '#cxone-chat-sidebar',
       embedded: true,
       onEmbeddedClose: closeSidebar,
-      cxoneToken: cxoneToken.value || undefined,
       homeScreen: {
         welcomeText: 'Welcome',
-        subtitle: 'How can I help you Today?',
-        suggestionsLabel: 'Here are some things Copilot can help you do:',
-        inputPlaceholder: 'Ask a question or request...',
+        subtitle: 'How can I help you today?',
         conversationStarters: [
-          { title: 'What is the most used category?' },
-          { title: 'Which agents had adherence issues last month and what was the root cause?' },
-          { title: 'What is the average ASA of Team A, B and C from past month?' },
-          { title: 'How many calls with Campaign A were refused yesterday?' },
+          { title: 'What can you help me with?' },
+          { title: 'Show me an example' },
         ],
       },
     })
   }
 }
+
+const handleSendMessage = () => {
+  sendMessage('Hello from control button!')
+}
+
+const handleNotification = () => {
+  showNotification('This is a test notification')
+}
+
+const handleNewConversation = () => {
+  startConversation()
+}
+
+const handleEndSession = () => {
+  endSession()
+}
 </script>
 
 <template>
   <div class="app-shell" :class="{ 'sidebar-open': isSidebarOpen }">
-    <header class="app-header glass-panel">
+    <header class="app-header">
       <div class="branding">
-        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-mark"></span>
         <div>
-          <p class="eyebrow">CXone</p>
-          <strong>Actions Studio</strong>
+          <p class="eyebrow">CXone Chat</p>
+          <strong>Demo App</strong>
         </div>
       </div>
       <div class="header-actions">
-        <input
-          v-model="cxoneToken"
-          type="text"
-          placeholder="CXone Bearer Token"
-          class="token-input"
-        />
-        <button class="ghost-button" type="button" :disabled="!isChatReady" @click="handleOpenChat">
-          {{ isChatReady ? 'Open Webchat' : 'Loading Webchat' }}
-        </button>
-        <button class="ghost-button" type="button" @click="handleOpenCustomChat">
-          Open Custom Chat
-        </button>
-        <button
-          class="ghost-button cxone-chat-btn"
-          type="button"
-          @click="handleToggleCXoneChat"
-        >
-          {{ isSidebarOpen ? 'Close CXone Chat' : 'Open CXone Chat' }}
+        <button class="btn" type="button" @click="handleToggleChat">
+          {{ isSidebarOpen ? 'Close Chat' : 'Open Chat' }}
         </button>
       </div>
     </header>
 
     <div class="main-layout">
-      <main class="content-panel glass-panel">
+      <main class="content-panel">
         <nav class="primary-tabs">
           <RouterLink v-for="tab in tabs" :key="tab.to" :to="tab.to" class="tab-link">
             {{ tab.label }}
@@ -122,30 +94,91 @@ const handleToggleCXoneChat = async () => {
         <slot />
       </main>
 
-      <aside v-show="isSidebarOpen" class="chat-sidebar glass-panel">
+      <aside v-show="isSidebarOpen" class="chat-sidebar">
+        <div class="chat-controls">
+          <span class="status-badge" :class="status">{{ status }}</span>
+          <button class="btn-sm" @click="open" :disabled="status !== 'ready'">Open</button>
+          <button class="btn-sm" @click="close" :disabled="status !== 'ready'">Close</button>
+          <button class="btn-sm" @click="toggle" :disabled="status !== 'ready'">Toggle</button>
+          <button class="btn-sm" @click="handleSendMessage" :disabled="status !== 'ready'">Send Msg</button>
+          <button class="btn-sm" @click="handleNotification" :disabled="status !== 'ready'">Notify</button>
+          <button class="btn-sm" @click="handleNewConversation" :disabled="status !== 'ready'">New Conv</button>
+          <button class="btn-sm" @click="handleEndSession" :disabled="status !== 'ready'">End</button>
+        </div>
         <div id="cxone-chat-sidebar" class="chat-container"></div>
       </aside>
     </div>
-    <CustomChatModal />
   </div>
 </template>
 
 <style scoped>
 .app-shell {
   min-height: 100vh;
-  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0;
 }
 
 .app-shell.sidebar-open {
   margin-right: 500px;
 }
 
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: #f5f5f5;
+  border-bottom: 1px solid #d1d1d1;
+}
+
+.branding {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-mark {
+  width: 24px;
+  height: 24px;
+  background: #0C3985;
+  border-radius: 4px;
+}
+
+.eyebrow {
+  font-size: 10px;
+  color: #666;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.branding strong {
+  font-size: 14px;
+  color: #333;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 6px 12px;
+  border: 1px solid #d1d1d1;
+  border-radius: 3px;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: #f0f0f0;
+}
+
 .main-layout {
   display: flex;
-  gap: 0;
   flex: 1;
   min-height: 0;
 }
@@ -158,7 +191,31 @@ const handleToggleCXoneChat = async () => {
   flex: 1;
   min-width: 0;
   overflow: auto;
-  border-radius: 0;
+}
+
+.primary-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid #d1d1d1;
+  margin-bottom: 12px;
+}
+
+.tab-link {
+  padding: 8px 16px;
+  font-size: 12px;
+  color: #666;
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.tab-link:hover {
+  color: #333;
+}
+
+.tab-link.router-link-active {
+  color: #0C3985;
+  border-bottom-color: #0C3985;
 }
 
 .chat-sidebar {
@@ -169,11 +226,66 @@ const handleToggleCXoneChat = async () => {
   height: 100dvh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  padding: 0;
-  border-radius: 0;
   border-left: 1px solid #d1d1d1;
   background: #fff;
+}
+
+.chat-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px;
+  background: #f5f5f5;
+  border-bottom: 1px solid #d1d1d1;
+  align-items: center;
+}
+
+.status-badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.status-badge.idle {
+  background: #e5e5e5;
+  color: #666;
+}
+
+.status-badge.loading {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-badge.ready {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-badge.error {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.btn-sm {
+  font-family: inherit;
+  font-size: 10px;
+  padding: 3px 6px;
+  border: 1px solid #d1d1d1;
+  border-radius: 2px;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+}
+
+.btn-sm:hover:not(:disabled) {
+  background: #f0f0f0;
+}
+
+.btn-sm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .chat-container {
@@ -182,40 +294,13 @@ const handleToggleCXoneChat = async () => {
   position: relative;
 }
 
-.token-input {
-  font-family: inherit;
-  font-size: 12px;
-  padding: 6px 10px;
-  border: 1px solid #d1d1d1;
-  border-radius: 3px;
-  background: #fff;
-  color: #333;
-  min-width: 180px;
-  max-width: 250px;
-}
-
-.token-input::placeholder {
-  color: #999;
-}
-
-.token-input:focus {
-  outline: 1px solid #0066cc;
-  border-color: #0066cc;
-}
-
-/* Responsive: stack on smaller screens */
 @media (max-width: 900px) {
-  .main-layout {
-    flex-direction: column;
-  }
-
   .app-shell.sidebar-open {
     margin-right: 0;
   }
 
   .chat-sidebar {
     width: 100%;
-    height: 100dvh;
   }
 }
 </style>

@@ -1,26 +1,37 @@
 {
   "name": "@cxone/chat",
   "version": "1.0.0",
-  "description": "CXone Chat - One-liner webchat initialization script",
+  "description": "CXone Chat - One-liner webchat initialization script with bundled Cognigy webchat",
   "type": "module",
-  "main": "dist/cxone-chat.js",
-  "module": "dist/cxone-chat.js",
+  "main": "dist/cxone-chat.min.js",
+  "module": "dist/cxone-chat.esm.js",
   "types": "dist/types/cxone-chat.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/cxone-chat.js",
-      "require": "./dist/cxone-chat.js",
+      "import": "./dist/cxone-chat.esm.js",
+      "require": "./dist/cxone-chat.min.js",
       "types": "./dist/types/cxone-chat.d.ts"
+    },
+    "./esm": {
+      "import": "./dist/cxone-chat.esm.js",
+      "types": "./dist/types/cxone-chat.d.ts"
+    },
+    "./iife": {
+      "import": "./dist/cxone-chat.min.js",
+      "require": "./dist/cxone-chat.min.js"
     }
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "rollup -c",
-    "build:watch": "rollup -c -w",
+    "build": "node scripts/build.js",
+    "build:wrapper": "npx rollup -c wrapper/rollup.config.js",
+    "build:webchat": "cd webchat && npm run build",
+    "build:watch": "npx rollup -c wrapper/rollup.config.js -w",
     "serve": "npx serve -p 8080",
-    "dev": "npm run build && npm run serve"
+    "dev": "node scripts/dev.js",
+    "dev:full": "npm run build && npm run serve"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",

@@ -24,7 +24,7 @@ import { ref, shallowRef } from 'vue'
 // Configuration
 // ============================================================================
 
-const CXONE_CHAT_SCRIPT = '/cxone-chat/cxone-chat.js'
+const CXONE_CHAT_SCRIPT = '/cxone-chat/cxone-chat.bundle.js'
 const DEFAULT_ENDPOINT = 'https://endpoint-dev.cognigy.ai/ea50316a5a49e574da804c75175ce5ea671ba2e15ddd228076dd0d6e339af6c6'
 
 // ============================================================================

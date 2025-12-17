@@ -5,31 +5,22 @@
   "type": "module",
   "workspaces": [
     "demo-app",
-    "sdk-app",
     "cxone-chat",
-    "backend",
-    "webchat"
+    "backend"
   ],
   "scripts": {
     "dev": "yarn workspace demo-app dev",
-    "dev:all": "concurrently \"yarn dev\" \"yarn backend\" \"yarn watch:webchat\" \"yarn watch:cxone-chat\"",
-    "dev:webchat": "yarn workspace @cognigy/webchat dev",
-    "watch:webchat": "yarn workspace @cognigy/webchat watch",
-    "watch:cxone-chat": "yarn workspace @cxone/chat build:watch",
+    "dev:all": "concurrently \"yarn dev\" \"yarn backend\"",
     "backend": "node backend/server.js",
-    "build:sdk": "yarn workspace @cxone/webchat-sdk build",
     "build:cxone-chat": "yarn workspace @cxone/chat build",
-    "build:cxone-chat:prod": "WEBCHAT_URL=/webchat/webchat.js BACKEND_URL= yarn workspace @cxone/chat build",
-    "build:webchat": "yarn workspace @cognigy/webchat build",
     "build:demo": "yarn workspace demo-app build",
-    "build": "yarn build:cxone-chat && yarn build:sdk && yarn build:demo",
-    "build:production": "yarn build:webchat && yarn build:cxone-chat:prod && yarn build:demo",
-    "build:gh-pages": "yarn build:cxone-chat && yarn build:sdk && yarn workspace demo-app build:gh-pages",
+    "build": "yarn build:cxone-chat && yarn build:demo",
+    "build:gh-pages": "yarn build:cxone-chat && yarn workspace demo-app build:gh-pages",
     "preview": "yarn workspace demo-app preview",
     "deploy": "yarn build:gh-pages && gh-pages -d demo-app/dist",
-    "start": "node server.production.js",
-    "start:local": "yarn build:production && yarn start",
-    "fly:deploy": "yarn build:production && fly deploy",
+    "start": "node backend/server.production.js",
+    "start:local": "yarn build && yarn start",
+    "fly:deploy": "yarn build && fly deploy",
     "fly:logs": "fly logs"
   },
   "dependencies": {

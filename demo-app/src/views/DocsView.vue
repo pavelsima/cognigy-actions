@@ -8,14 +8,66 @@
     <p class="subtitle">One-liner initialization script for embedding CXone AI Assistant webchat</p>
 
     <section class="doc-section">
-      <h2>Quick Start</h2>
-      <pre class="code-block"><code>&lt;script src="/cxone-chat/cxone-chat.js"&gt;&lt;/script&gt;
+      <h2>Quick Start (Script Tag)</h2>
+      <pre class="code-block"><code>&lt;!-- Single script includes webchat + wrapper --&gt;
+&lt;script src="/cxone-chat/cxone-chat.min.js"&gt;&lt;/script&gt;
 &lt;script&gt;
   CXOneChat.init({
     endpoint: 'https://your-cognigy-endpoint.com/...',
     context: 'actions'
   });
 &lt;/script&gt;</code></pre>
+    </section>
+
+    <section class="doc-section">
+      <h2>ESM Import</h2>
+      <pre class="code-block"><code>// Import as ES module
+import { CXOneChat } from '/cxone-chat/cxone-chat.esm.js'
+
+// Or with a bundler
+import { CXOneChat } from '@cxone/chat'
+
+// Initialize
+const chat = await CXOneChat.init({
+  endpoint: 'https://your-cognigy-endpoint.com/...',
+  context: 'actions'
+})
+
+chat.open()
+chat.sendMessage('Hello!')</code></pre>
+
+      <h3>Available Builds</h3>
+      <table class="api-table">
+        <thead>
+          <tr>
+            <th>File</th>
+            <th>Format</th>
+            <th>Use Case</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>cxone-chat.min.js</code></td>
+            <td>IIFE</td>
+            <td>Script tag (production)</td>
+          </tr>
+          <tr>
+            <td><code>cxone-chat.bundle.js</code></td>
+            <td>IIFE</td>
+            <td>Script tag (unminified, debugging)</td>
+          </tr>
+          <tr>
+            <td><code>cxone-chat.esm.js</code></td>
+            <td>ESM</td>
+            <td>ES module import</td>
+          </tr>
+          <tr>
+            <td><code>cxone-chat.esm.min.js</code></td>
+            <td>ESM</td>
+            <td>ES module import (minified)</td>
+          </tr>
+        </tbody>
+      </table>
     </section>
 
     <section class="doc-section">
@@ -65,6 +117,24 @@
             <td><code>() =&gt; void</code></td>
             <td>No</td>
             <td>Callback when close button is clicked in embedded mode</td>
+          </tr>
+          <tr>
+            <td><code>cxoneToken</code></td>
+            <td><code>string</code></td>
+            <td>No</td>
+            <td>CXone Bearer token sent to Cognigy at conversation start</td>
+          </tr>
+          <tr>
+            <td><code>homeScreen</code></td>
+            <td><code>HomeScreenConfig</code></td>
+            <td>No</td>
+            <td>Home screen customization (welcomeText, subtitle, conversationStarters)</td>
+          </tr>
+          <tr>
+            <td><code>syncUrl</code></td>
+            <td><code>string</code></td>
+            <td>No</td>
+            <td>Backend URL for conversation persistence. If omitted, uses localStorage only</td>
           </tr>
         </tbody>
       </table>
@@ -148,6 +218,50 @@ chat.registerAnalyticsService((event) => {
     </section>
 
     <section class="doc-section">
+      <h2>Extended Methods</h2>
+
+      <div class="method">
+        <h3><code>CXOneChat.connect()</code></h3>
+        <p>Reconnect websocket connection.</p>
+      </div>
+
+      <div class="method">
+        <h3><code>CXOneChat.showNotification(message)</code></h3>
+        <p>Display a toast notification in the chat widget.</p>
+      </div>
+
+      <div class="method">
+        <h3><code>CXOneChat.startConversation()</code></h3>
+        <p>Start a new conversation (navigates from home screen to chat).</p>
+      </div>
+
+      <div class="method">
+        <h3><code>CXOneChat.on(event, handler)</code></h3>
+        <p>Listen to socket events (e.g., 'typingStatus').</p>
+      </div>
+
+      <div class="method">
+        <h3><code>CXOneChat.onMessage(handler)</code></h3>
+        <p>Listen to incoming bot messages.</p>
+      </div>
+
+      <div class="method">
+        <h3><code>CXOneChat.updateSettings(settings)</code></h3>
+        <p>Update webchat settings at runtime (colors, layout, behavior).</p>
+      </div>
+
+      <div class="method">
+        <h3><code>CXOneChat.endSession()</code></h3>
+        <p>End current session and clear messages.</p>
+      </div>
+
+      <div class="method">
+        <h3><code>CXOneChat.getWebchat()</code></h3>
+        <p>Get raw webchat instance for advanced usage.</p>
+      </div>
+    </section>
+
+    <section class="doc-section">
       <h2>Embedded Mode Example</h2>
       <p>Embed the webchat in a sidebar panel:</p>
       <pre class="code-block"><code>&lt;div id="chat-sidebar" style="width: 400px; height: 100vh;"&gt;&lt;/div&gt;
@@ -168,12 +282,13 @@ CXOneChat.init({
     <section class="doc-section">
       <h2>Features</h2>
       <ul class="feature-list">
-        <li><strong>Conversation Persistence</strong> - Messages are synced to backend and restored across sessions</li>
+        <li><strong>Conversation Persistence</strong> - Optional backend sync via syncUrl, or localStorage-only mode</li>
         <li><strong>Auto User ID</strong> - Automatically detects or generates user ID from localStorage/cookies</li>
         <li><strong>CXone Theming</strong> - Pre-configured with CXone brand colors</li>
-        <li><strong>Previous Conversations</strong> - Users can view and resume previous chat sessions</li>
+        <li><strong>Home Screen</strong> - Configurable welcome text and conversation starters</li>
         <li><strong>Embedded Mode</strong> - Render chat inside any container with relative positioning</li>
         <li><strong>Analytics Events</strong> - Subscribe to webchat events for custom integrations</li>
+        <li><strong>Framework Guides</strong> - See <a href="/vue-example">Vue</a> and <a href="/react-example">React</a> integration examples</li>
       </ul>
     </section>
   </div>

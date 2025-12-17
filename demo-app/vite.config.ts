@@ -34,19 +34,12 @@ function copyDirContents(srcDir: string, destDir: string, label: string) {
   }
 }
 
-// Plugin to copy SDK and cxone-chat files to dist folder
+// Plugin to copy cxone-chat files to dist folder
 function copyAssetsPlugin() {
   return {
     name: 'copy-assets',
     closeBundle() {
       const rootDir = join(process.cwd(), '..')
-
-      // Copy sdk-app/dist
-      copyDirContents(
-        join(rootDir, 'sdk-app', 'dist'),
-        join(process.cwd(), 'dist', 'sdk-app', 'dist'),
-        'copy-sdk'
-      )
 
       // Copy cxone-chat/dist
       copyDirContents(
@@ -73,42 +66,6 @@ function serveWorkspaceAssetsPlugin() {
         if (url.startsWith('/cxone-chat/')) {
           const fileName = url.replace('/cxone-chat/', '')
           const filePath = join(rootDir, 'cxone-chat', 'dist', fileName)
-
-          if (existsSync(filePath) && statSync(filePath).isFile()) {
-            const ext = filePath.split('.').pop()
-            const contentTypes: Record<string, string> = {
-              'js': 'application/javascript',
-              'css': 'text/css',
-              'map': 'application/json',
-            }
-            res.setHeader('Content-Type', contentTypes[ext || ''] || 'text/plain')
-            res.end(readFileSync(filePath))
-            return
-          }
-        }
-
-        // Serve /sdk-app/* from sdk-app/*
-        if (url.startsWith('/sdk-app/')) {
-          const fileName = url.replace('/sdk-app/', '')
-          const filePath = join(rootDir, 'sdk-app', fileName)
-
-          if (existsSync(filePath) && statSync(filePath).isFile()) {
-            const ext = filePath.split('.').pop()
-            const contentTypes: Record<string, string> = {
-              'js': 'application/javascript',
-              'css': 'text/css',
-              'map': 'application/json',
-            }
-            res.setHeader('Content-Type', contentTypes[ext || ''] || 'text/plain')
-            res.end(readFileSync(filePath))
-            return
-          }
-        }
-
-        // Serve /webchat/* from webchat/dist/*
-        if (url.startsWith('/webchat/')) {
-          const fileName = url.replace('/webchat/', '')
-          const filePath = join(rootDir, 'webchat', 'dist', fileName)
 
           if (existsSync(filePath) && statSync(filePath).isFile()) {
             const ext = filePath.split('.').pop()

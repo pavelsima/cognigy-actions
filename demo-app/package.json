@@ -4,7 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently -k -n cxone,vite -c blue,green \"yarn dev:cxone\" \"yarn dev:vite\"",
+    "dev:vite": "vite",
+    "dev:cxone": "yarn workspace @cxone/chat dev",
     "build": "vue-tsc -b && vite build",
     "build:gh-pages": "cross-env GITHUB_PAGES=true VITE_GITHUB_PAGES=true vue-tsc -b && cross-env GITHUB_PAGES=true VITE_GITHUB_PAGES=true vite build",
     "preview": "vite preview"
@@ -19,6 +21,7 @@
     "@types/node": "^24.10.0",
     "@vitejs/plugin-vue": "^6.0.1",
     "@vue/tsconfig": "^0.8.1",
+    "concurrently": "^9.1.0",
     "cross-env": "^7.0.3",
     "typescript": "~5.9.3",
     "vite": "^7.2.2",

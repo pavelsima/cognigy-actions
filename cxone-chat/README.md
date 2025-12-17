@@ -1,10 +1,11 @@
 # CXOneChat
 
-A wrapper around [Cognigy Webchat](https://github.com/Cognigy/Webchat) that provides simplified initialization, CXone theming, and optional backend conversation sync.
+A self-contained webchat bundle that wraps [Cognigy Webchat](https://github.com/Cognigy/Webchat) with simplified initialization, CXone theming, and optional backend conversation sync.
 
 ## Table of Contents
 
 - [Quick Start](#quick-start)
+- [ESM Import](#esm-import)
 - [Configuration](#configuration)
 - [API Reference](#api-reference)
   - [Global Methods](#global-methods)
@@ -13,23 +14,73 @@ A wrapper around [Cognigy Webchat](https://github.com/Cognigy/Webchat) that prov
 - [Home Screen](#home-screen)
 - [Analytics Events](#analytics-events)
 - [Backend Sync](#backend-sync)
+- [Framework Integration](#framework-integration)
 - [Customization Guide](#customization-guide)
 - [Original Webchat Reference](#original-webchat-reference)
 - [TypeScript Types](#typescript-types)
-- [Development](#development)
 
 ---
 
 ## Quick Start
 
 ```html
-<script src="/cxone-chat/cxone-chat.js"></script>
+<!-- Single script includes everything (webchat + wrapper) -->
+<script src="/cxone-chat/cxone-chat.min.js"></script>
 <script>
   CXOneChat.init({
     endpoint: 'https://your-cognigy-endpoint.com/...',
     context: 'actions'
   });
 </script>
+```
+
+---
+
+## ESM Import
+
+Use as an ES module in modern JavaScript/TypeScript projects:
+
+```javascript
+// Import as ESM
+import { CXOneChat } from '/cxone-chat/cxone-chat.esm.js'
+
+// Or with a bundler (after npm install)
+import { CXOneChat } from '@cxone/chat'
+
+// Initialize
+const chat = await CXOneChat.init({
+  endpoint: 'https://your-cognigy-endpoint.com/...',
+  context: 'actions'
+})
+
+// Use the API
+chat.open()
+chat.sendMessage('Hello!')
+```
+
+### Available Builds
+
+| File | Format | Size | Use Case |
+|------|--------|------|----------|
+| `cxone-chat.min.js` | IIFE | ~3MB | Script tag (`<script src="...">`) |
+| `cxone-chat.esm.js` | ESM | ~6MB | ES module import |
+| `cxone-chat.esm.min.js` | ESM | ~6MB | ES module import (minified) |
+| `cxone-chat.bundle.js` | IIFE | ~3MB | Script tag (unminified, debugging) |
+
+### TypeScript
+
+TypeScript definitions are included:
+
+```typescript
+import { CXOneChat, CXOneChatConfig, CXOneChatInstance } from '@cxone/chat'
+
+const config: CXOneChatConfig = {
+  endpoint: 'https://...',
+  context: 'my-app',
+  embedded: true,
+}
+
+const chat: CXOneChatInstance = await CXOneChat.init(config)
 ```
 
 ---
@@ -275,13 +326,31 @@ Your backend must implement:
 
 ---
 
+## Framework Integration
+
+For framework-specific integration patterns, see the dedicated guides:
+
+| Framework | Guide | Description |
+|-----------|-------|-------------|
+| **Vue 3** | [docs/GUIDE_VUE.md](docs/GUIDE_VUE.md) | Composition API composable with reactive state |
+| **React** | [docs/GUIDE_REACT.md](docs/GUIDE_REACT.md) | Custom hook with singleton pattern |
+
+These guides cover:
+- Creating reusable composables/hooks
+- Basic usage patterns
+- Embedded mode (sidebar integration)
+- Analytics event handling
+- TypeScript types
+
+---
+
 ## Customization Guide
 
 ### What CXOneChat Controls (Can Modify)
 
 | Feature | Location | Notes |
 |---------|----------|-------|
-| Theme colors | `updateSettings()` or `CONFIG.THEME` | Runtime or rebuild |
+| Theme colors | `updateSettings()` | Runtime config |
 | Home screen text | `homeScreen` config | Runtime config |
 | Conversation starters | `homeScreen.conversationStarters` | Runtime config |
 | Input placeholder | `homeScreen.inputPlaceholder` | Runtime config |

@@ -13,30 +13,21 @@ RUN apt-get update && apt-get install -y \
 # Copy package files
 COPY package.json yarn.lock ./
 COPY demo-app/package.json ./demo-app/
-COPY sdk-app/package.json ./sdk-app/
 COPY cxone-chat/package.json ./cxone-chat/
 COPY backend/package.json ./backend/
-COPY webchat/package.json ./webchat/
 
 # Install all dependencies
 RUN yarn install --frozen-lockfile
 
 # Copy source files
 COPY demo-app/ ./demo-app/
-COPY sdk-app/ ./sdk-app/
 COPY cxone-chat/ ./cxone-chat/
 COPY backend/ ./backend/
-COPY webchat/ ./webchat/
-COPY server.production.js ./
 
 # Build all packages
-# Build webchat first (used by cxone-chat)
-RUN yarn build:webchat
-# Set production URLs for cxone-chat build
+# cxone-chat build includes webchat build internally
 ENV BACKEND_URL=""
-ENV WEBCHAT_URL="/webchat/webchat.js"
 RUN yarn build:cxone-chat
-RUN yarn build:sdk
 RUN yarn build:demo
 
 # Production stage
@@ -60,10 +51,8 @@ RUN yarn install --frozen-lockfile --production
 
 # Copy built assets from builder
 COPY --from=builder /app/demo-app/dist ./demo-app/dist
-COPY --from=builder /app/sdk-app/dist ./sdk-app/dist
 COPY --from=builder /app/cxone-chat/dist ./cxone-chat/dist
-COPY --from=builder /app/webchat/dist ./webchat/dist
-COPY --from=builder /app/server.production.js ./
+COPY --from=builder /app/backend/server.production.js ./backend/
 
 # Create data directory for SQLite
 RUN mkdir -p /data
@@ -74,4 +63,4 @@ ENV PORT=8080
 
 EXPOSE 8080
 
-CMD ["node", "server.production.js"]
+CMD ["node", "backend/server.production.js"]

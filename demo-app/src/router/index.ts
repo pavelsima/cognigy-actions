@@ -5,27 +5,22 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: '/insights',
-    },
-    {
-      path: '/insights',
-      name: 'insights',
-      component: () => import('@/views/InsightsView.vue'),
-    },
-    {
-      path: '/email',
-      name: 'email',
-      component: () => import('@/views/EmailView.vue'),
-    },
-    {
-      path: '/knowledge',
-      name: 'knowledge',
-      component: () => import('@/views/KnowledgeArticleView.vue'),
+      redirect: '/docs',
     },
     {
       path: '/docs',
       name: 'docs',
       component: () => import('@/views/DocsView.vue'),
+    },
+    {
+      path: '/vue-example',
+      name: 'vue-example',
+      component: () => import('@/views/VueExampleView.vue'),
+    },
+    {
+      path: '/react-example',
+      name: 'react-example',
+      component: () => import('@/views/ReactExampleView.vue'),
     },
   ],
   scrollBehavior() {
