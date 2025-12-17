@@ -62,13 +62,25 @@ const handleToggleCXoneChat = async () => {
       embedded: true,
       onEmbeddedClose: closeSidebar,
       cxoneToken: cxoneToken.value || undefined,
+      homeScreen: {
+        welcomeText: 'Welcome',
+        subtitle: 'How can I help you Today?',
+        suggestionsLabel: 'Here are some things Copilot can help you do:',
+        inputPlaceholder: 'Ask a question or request...',
+        conversationStarters: [
+          { title: 'What is the most used category?' },
+          { title: 'Which agents had adherence issues last month and what was the root cause?' },
+          { title: 'What is the average ASA of Team A, B and C from past month?' },
+          { title: 'How many calls with Campaign A were refused yesterday?' },
+        ],
+      },
     })
   }
 }
 </script>
 
 <template>
-  <div class="app-shell">
+  <div class="app-shell" :class="{ 'sidebar-open': isSidebarOpen }">
     <header class="app-header glass-panel">
       <div class="branding">
         <span class="brand-mark" aria-hidden="true"></span>
@@ -125,6 +137,11 @@ const handleToggleCXoneChat = async () => {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  transition: margin-right 0.3s ease;
+}
+
+.app-shell.sidebar-open {
+  margin-right: 700px;
 }
 
 .main-layout {
@@ -145,11 +162,17 @@ const handleToggleCXoneChat = async () => {
 }
 
 .chat-sidebar {
-  width: 500px;
-  min-width: 350px;
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 700px;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  padding: 0;
+  border-radius: 0;
+  border: 0;
 }
 
 
@@ -201,10 +224,13 @@ const handleToggleCXoneChat = async () => {
     flex-direction: column;
   }
 
+  .app-shell.sidebar-open {
+    margin-right: 0;
+  }
+
   .chat-sidebar {
     width: 100%;
-    min-width: 0;
-    height: 500px;
+    height: 100dvh;
   }
 }
 </style>

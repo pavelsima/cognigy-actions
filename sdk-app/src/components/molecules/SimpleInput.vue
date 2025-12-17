@@ -91,9 +91,9 @@ $icon-color: #6B7280;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
+  padding: 4px 12px;
   border: 1px solid $border-color;
-  border-radius: 24px;
+  border-radius: 8px;
   background: #fff;
   transition: border-color 0.15s ease;
 

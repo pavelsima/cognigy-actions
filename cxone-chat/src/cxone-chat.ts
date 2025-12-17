@@ -22,19 +22,17 @@ const CONFIG = {
   // Backend for conversation persistence (injected at build time, empty = same origin)
   BACKEND_URL: process.env.BACKEND_URL,
 
-  // CXone Theming
+  // CXone Theming - Following CXone Conversation UI Guidelines
+  // Property names must match webchat's IWebchatTheme interface
   THEME: {
     primaryColor: '#0C3985',
     secondaryColor: '#3B5EFF',
-    chatInterfaceColor: '#0C3985',
-    botMessageColor: '#F1F5F9',
-    userMessageColor: '#0C3985',
-    textColor: '#1F2937',
-    textLinkColor: '#3B5EFF',
+    // CXone: Grey background for AI/bot messages, white for user messages
+    backgroundBotMessage: '#F2F2F2',
+    backgroundUserMessage: '#FFFFFF',
+    textLink: '#3B5EFF',
     greyColor: '#E5E7EB',
     greyContrastColor: '#4B5563',
-    botMessageTextColor: '#1F2937',
-    userMessageTextColor: '#FFFFFF',
   },
 } as const;
 
@@ -44,6 +42,28 @@ let currentEndpoint: string = '';
 // ============================================================================
 // Types
 // ============================================================================
+
+/** Conversation starter button configuration */
+export interface ConversationStarter {
+  /** Button title displayed to user */
+  title: string;
+  /** Payload sent when clicked (defaults to title if not provided) */
+  payload?: string;
+}
+
+/** Home screen configuration */
+export interface HomeScreenConfig {
+  /** Welcome message (e.g., "Welcome, John") */
+  welcomeText?: string;
+  /** Subtitle below welcome text (e.g., "How can I help you Today?") */
+  subtitle?: string;
+  /** Label above suggestion cards (e.g., "Here are some things Copilot can help you do:") */
+  suggestionsLabel?: string;
+  /** Placeholder for input field */
+  inputPlaceholder?: string;
+  /** Conversation starter suggestions */
+  conversationStarters?: ConversationStarter[];
+}
 
 export interface CXOneChatConfig {
   /** Required: Cognigy webchat endpoint URL */
@@ -60,6 +80,8 @@ export interface CXOneChatConfig {
   onEmbeddedClose?: () => void;
   /** Optional: CXone Bearer token to send to Cognigy at conversation start */
   cxoneToken?: string;
+  /** Optional: Home screen configuration */
+  homeScreen?: HomeScreenConfig;
 }
 
 export interface WebchatAnalyticsEvent {
@@ -337,7 +359,7 @@ const CXOneChat = {
       return instance;
     }
 
-    const { endpoint, context, userId, container, embedded, onEmbeddedClose, cxoneToken } = config;
+    const { endpoint, context, userId, container, embedded, onEmbeddedClose, cxoneToken, homeScreen: homeScreenConfig } = config;
 
     if (!endpoint) {
       throw new Error('[CXOneChat] endpoint is required');
@@ -410,9 +432,12 @@ const CXOneChat = {
           },
           homeScreen: {
             enabled: true,
-            welcomeText: `Welcome to CXone ${currentContext.charAt(0).toUpperCase() + currentContext.slice(1)}`,
+            welcomeText: homeScreenConfig?.welcomeText || 'Welcome',
+            subtitle: homeScreenConfig?.subtitle || 'How can I help you Today?',
+            suggestionsLabel: homeScreenConfig?.suggestionsLabel || 'Here are some things Copilot can help you do:',
+            inputPlaceholder: homeScreenConfig?.inputPlaceholder || 'Ask a question or request...',
             textColor: '#1F2937',
-            background: '#F9FAFB',
+            background: '#FFFFFF',
             previousConversations: {
               enabled: true,
               buttonText: 'Previous Conversations',
@@ -422,6 +447,14 @@ const CXOneChat = {
               text: 'Start Conversation',
               textColor: '#FFFFFF',
               backgroundColor: '#0C3985',
+            },
+            conversationStarters: {
+              enabled: (homeScreenConfig?.conversationStarters?.length ?? 0) > 0,
+              starters: (homeScreenConfig?.conversationStarters || []).map(s => ({
+                type: 'postback' as const,
+                title: s.title,
+                payload: s.payload || s.title,
+              })),
             },
           },
           rating: {

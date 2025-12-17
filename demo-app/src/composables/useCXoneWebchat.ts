@@ -37,6 +37,19 @@ interface CXOneChatInstance {
   registerAnalyticsService: (handler: (event: WebchatAnalyticsEvent) => void) => void
 }
 
+interface ConversationStarter {
+  title: string
+  payload?: string
+}
+
+interface HomeScreenConfig {
+  welcomeText?: string
+  subtitle?: string
+  suggestionsLabel?: string
+  inputPlaceholder?: string
+  conversationStarters?: ConversationStarter[]
+}
+
 interface CXOneChatConfig {
   endpoint: string
   context: string
@@ -45,6 +58,7 @@ interface CXOneChatConfig {
   embedded?: boolean
   onEmbeddedClose?: () => void
   cxoneToken?: string
+  homeScreen?: HomeScreenConfig
 }
 
 interface CXOneChat {
@@ -255,6 +269,7 @@ const init = async (options?: {
   embedded?: boolean
   onEmbeddedClose?: () => void
   cxoneToken?: string
+  homeScreen?: HomeScreenConfig
 }) => {
   if (status.value === 'loading' || status.value === 'ready') return
 
@@ -275,6 +290,7 @@ const init = async (options?: {
       embedded: options?.embedded,
       onEmbeddedClose: options?.onEmbeddedClose,
       cxoneToken: options?.cxoneToken,
+      homeScreen: options?.homeScreen,
     })
 
     // Attach analytics logger for handling events
