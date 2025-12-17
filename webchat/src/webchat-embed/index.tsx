@@ -7,10 +7,14 @@ import "./embedded-webchat-styles.css";
 // load plugins
 import "../plugins/get-started-button-input";
 import "../plugins/rating";
+import customTextWithButtonsPlugin from "../plugins/custom-text-with-buttons";
 import { Webchat } from "../webchat/components/Webchat";
-import { getRegisteredMessagePlugins, prepareMessagePlugins } from "../plugins/helper";
+import { registerMessagePlugin, getRegisteredMessagePlugins, prepareMessagePlugins } from "../plugins/helper";
 import { getStorage } from "../webchat/helper/storage";
 import { IWebchatSettings } from "../common/interfaces/webchat-config";
+
+// Register custom plugins (registered first = higher priority)
+registerMessagePlugin(customTextWithButtonsPlugin);
 
 type SocketOptions = React.ComponentProps<typeof Webchat>["options"];
 type WebchatSettings = React.ComponentProps<typeof Webchat>["settings"];

@@ -931,6 +931,7 @@ export class WebchatUI extends React.PureComponent<
 	handleStartConversation = () => {
 		this.props.onSetShowHomeScreen(false);
 		this.props.onSetShowChatOptionsScreen(false);
+		this.props.onSetShowPrevConversations(false);
 
 		const showPrivacyScreen =
 			this.props.config.settings.privacyNotice.enabled && !this.props.hasAcceptedTerms;
@@ -1547,7 +1548,15 @@ export class WebchatUI extends React.PureComponent<
 								onSetShowChatOptionsScreen={() => {
 									onSetShowChatOptionsScreen(true);
 								}}
+								onSetShowPrevConversations={onSetShowPrevConversations}
 								isChatOptionsButtonVisible={isChatOptionsButtonVisible}
+								isPrevConversationsButtonVisible={
+									showChatScreen &&
+									!showPrevConversations &&
+									!showChatOptionsScreen &&
+									!showRatingScreen &&
+									config.settings.homeScreen.previousConversations.enabled
+								}
 								isDeleteAllConversationsButtonVisible={
 									showDeleteAllConversationButton
 								}

@@ -63,40 +63,46 @@ const lineChartOptions = computed(() => chartOptions.value as ChartOptions<'line
 .chart-card {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  padding: 1.5rem;
-  min-height: 280px;
+  gap: 12px;
+  padding: 16px;
+  min-height: 250px;
+  border: 1px solid #d1d1d1;
+  background: #fff;
 }
 
 .chart-header {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 12px;
+  border-bottom: 1px solid #e5e5e5;
+  padding-bottom: 12px;
 }
 
 .chart-header strong {
-  font-size: 1.25rem;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .pill {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.35rem 0.75rem;
-  border-radius: 999px;
-  font-size: 0.85rem;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 2px;
+  font-size: 11px;
   font-weight: 600;
 }
 
 .pill-positive {
-  color: rgba(34, 197, 94, 0.95);
-  background: rgba(34, 197, 94, 0.1);
+  color: #1a7f37;
+  background: #dafbe1;
+  border: 1px solid #1a7f37;
 }
 
 .chart-wrapper {
   flex: 1;
-  min-height: 200px;
+  min-height: 180px;
 }
 
 .chart-wrapper canvas {
@@ -106,8 +112,9 @@ const lineChartOptions = computed(() => chartOptions.value as ChartOptions<'line
 
 .chart-placeholder {
   margin: 0;
-  color: var(--cxone-muted-text);
-  padding: 1.5rem 0;
+  color: #666;
+  padding: 16px 0;
   text-align: center;
+  font-size: 12px;
 }
 </style>

@@ -186,13 +186,10 @@
 /* Bot message container - light gray background with border */
 [data-cognigy-webchat-root] .cc-message-row--left .cc-message-bubble,
 [data-cognigy-webchat-root] .webchat-message-row.bot .cc-message-bubble,
-[data-cognigy-webchat-root] [class*="webchat-message-row"][class*="bot"] [class*="_bubble"],
-[data-cognigy-webchat-root] .chat-bubble._incoming_jbjrn_27,
-[data-cognigy-webchat-root] ._bubble_jbjrn_1._incoming_jbjrn_27 {
+[data-cognigy-webchat-root] [class*="webchat-message-row"][class*="bot"] [class*="_bubble"] {
 	background-color: #F5F8FA !important;
 	border: 1px solid #D2D8DB;
 	border-radius: 12px !important;
-	padding: 12px 16px !important;
 	box-shadow: none !important;
 	max-width: 100% !important;
 }

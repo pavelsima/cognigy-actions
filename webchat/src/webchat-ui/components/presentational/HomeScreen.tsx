@@ -1,6 +1,7 @@
 import React, { RefObject, useEffect, useRef, useState } from "react";
 import styled from "@emotion/styled";
 import CloseIcon from "../../assets/close-16px.svg";
+import HistoryIcon from "../../assets/history-16px.svg";
 import PixieDustIcon from "../../../assets/icons/pixie_dust.svg";
 import SendIconSvg from "../../../assets/icons/send.svg";
 import { IWebchatConfig } from "../../../common/interfaces/webchat-config";
@@ -33,11 +34,55 @@ const HomeScreenHeader = styled.div({
 	display: "flex",
 	flexDirection: "row",
 	alignItems: "center",
-	justifyContent: "flex-end",
+	justifyContent: "space-between",
 	width: "100%",
 	padding: "12px 16px",
 	borderBottom: "1px solid #E5E7EB",
 });
+
+const HeaderLeftSection = styled.div({
+	display: "flex",
+	alignItems: "center",
+});
+
+const HeaderRightSection = styled.div({
+	display: "flex",
+	alignItems: "center",
+});
+
+const HistoryButton = styled.button(({ theme }) => ({
+	display: "flex",
+	alignItems: "center",
+	gap: 6,
+	padding: "6px 12px",
+	backgroundColor: "transparent",
+	border: "none",
+	borderRadius: 6,
+	fontSize: 13,
+	fontWeight: 500,
+	color: "#6B7280",
+	cursor: "pointer",
+	transition: "background-color 0.2s, color 0.2s",
+
+	"& svg": {
+		width: 14,
+		height: 14,
+		fill: "#6B7280",
+	},
+
+	"&:hover": {
+		backgroundColor: "#F3F4F6",
+		color: theme.primaryColor || "#0C3985",
+		"& svg": {
+			fill: theme.primaryColor || "#0C3985",
+		},
+	},
+
+	"&:focus-visible": {
+		outline: `2px solid ${theme.primaryColor || "#0C3985"}`,
+		outlineOffset: 2,
+	},
+}));
 
 const HomeScreenHeaderIconButton = styled(IconButton)(({ theme }) => ({
 	color: "#6B7280",
@@ -346,18 +391,38 @@ export const HomeScreen: React.FC<IHomeScreenProps> = props => {
 			</h2>
 
 			<HomeScreenHeader className="webchat-homescreen-header">
-				<HomeScreenHeaderIconButton
-					ref={closeButtonRef}
-					onClick={onClose}
-					className="webchat-homescreen-close-button"
-					aria-label={
-						config.settings.customTranslations?.ariaLabels?.closeChat ??
-						"Close chat"
-					}
-					color="primary"
-				>
-					<CloseIcon />
-				</HomeScreenHeaderIconButton>
+				<HeaderLeftSection>
+					{homeScreen.previousConversations?.enabled && (
+						<HistoryButton
+							onClick={() => {
+								props.onSetShowHomeScreen(false);
+								props.onSetShowPrevConversations(true);
+							}}
+							className="webchat-homescreen-history-button"
+							aria-label={
+								config.settings.customTranslations?.ariaLabels?.previousConversations ??
+								"Previous conversations"
+							}
+						>
+							<HistoryIcon />
+							<span>{homeScreen.previousConversations?.buttonText || "History"}</span>
+						</HistoryButton>
+					)}
+				</HeaderLeftSection>
+				<HeaderRightSection>
+					<HomeScreenHeaderIconButton
+						ref={closeButtonRef}
+						onClick={onClose}
+						className="webchat-homescreen-close-button"
+						aria-label={
+							config.settings.customTranslations?.ariaLabels?.closeChat ??
+							"Close chat"
+						}
+						color="primary"
+					>
+						<CloseIcon />
+					</HomeScreenHeaderIconButton>
+				</HeaderRightSection>
 			</HomeScreenHeader>
 
 			<HomeScreenContent className="webchat-homescreen-content">

@@ -181,52 +181,52 @@ CXOneChat.init({
 
 <style scoped>
 .docs-view {
-  max-width: 900px;
-  margin: 0 auto;
+  max-width: 800px;
 }
 
 h1 {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--text-primary, #1F2937);
-  margin-bottom: 0.5rem;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
 }
 
 .subtitle {
-  color: var(--text-secondary, #6B7280);
-  font-size: 1.1rem;
-  margin-bottom: 2rem;
+  color: #666;
+  font-size: 12px;
+  margin-bottom: 20px;
 }
 
 .doc-section {
-  margin-bottom: 2.5rem;
+  margin-bottom: 24px;
 }
 
 h2 {
-  font-size: 1.4rem;
+  font-size: 14px;
   font-weight: 600;
-  color: var(--text-primary, #1F2937);
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border-color, #E5E7EB);
+  color: #333;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #d1d1d1;
 }
 
 h3 {
-  font-size: 1.1rem;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--text-primary, #1F2937);
-  margin-bottom: 0.5rem;
+  color: #333;
+  margin-bottom: 4px;
 }
 
 .code-block {
-  background: #1E293B;
-  color: #E2E8F0;
-  padding: 1rem 1.25rem;
-  border-radius: 8px;
+  background: #f5f5f5;
+  color: #333;
+  padding: 10px 12px;
+  border-radius: 0;
+  border: 1px solid #d1d1d1;
   overflow-x: auto;
-  font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
-  font-size: 0.875rem;
-  line-height: 1.6;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  line-height: 1.5;
 }
 
 .code-block code {
@@ -236,35 +236,36 @@ h3 {
 }
 
 code {
-  background: #F1F5F9;
-  color: #0C3985;
-  padding: 0.15rem 0.4rem;
-  border-radius: 4px;
-  font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
-  font-size: 0.9em;
+  background: #f0f0f0;
+  color: #0066cc;
+  padding: 1px 4px;
+  border-radius: 0;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
 }
 
 .api-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.95rem;
+  font-size: 12px;
+  border: 1px solid #d1d1d1;
 }
 
 .api-table th,
 .api-table td {
   text-align: left;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--border-color, #E5E7EB);
+  padding: 8px 10px;
+  border: 1px solid #d1d1d1;
 }
 
 .api-table th {
-  background: #F8FAFC;
+  background: #f5f5f5;
   font-weight: 600;
-  color: var(--text-primary, #1F2937);
+  color: #333;
 }
 
 .api-table td {
-  color: var(--text-secondary, #4B5563);
+  color: #666;
 }
 
 .api-table td:first-child {
@@ -272,11 +273,11 @@ code {
 }
 
 .method {
-  margin-bottom: 1.5rem;
-  padding: 1rem;
-  background: #F8FAFC;
-  border-radius: 8px;
-  border: 1px solid var(--border-color, #E5E7EB);
+  margin-bottom: 12px;
+  padding: 10px;
+  background: #fafafa;
+  border-radius: 0;
+  border: 1px solid #d1d1d1;
 }
 
 .method h3 {
@@ -284,38 +285,28 @@ code {
 }
 
 .method p {
-  margin: 0.5rem 0;
-  color: var(--text-secondary, #4B5563);
+  margin: 4px 0;
+  color: #666;
+  font-size: 12px;
 }
 
 .method .code-block {
-  margin-top: 0.75rem;
+  margin-top: 8px;
 }
 
 .feature-list {
-  list-style: none;
-  padding: 0;
+  list-style: disc;
+  padding-left: 20px;
+  margin: 0;
 }
 
 .feature-list li {
-  padding: 0.5rem 0;
-  padding-left: 1.5rem;
-  position: relative;
-  color: var(--text-secondary, #4B5563);
-}
-
-.feature-list li::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0.85rem;
-  width: 8px;
-  height: 8px;
-  background: #0C3985;
-  border-radius: 50%;
+  padding: 4px 0;
+  color: #666;
+  font-size: 12px;
 }
 
 .feature-list strong {
-  color: var(--text-primary, #1F2937);
+  color: #333;
 }
 </style>

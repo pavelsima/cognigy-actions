@@ -5,6 +5,7 @@ import CloseIcon from "../../assets/close-16px.svg";
 import MinimizeIcon from "../../assets/minimize-16px.svg";
 import GoBackIcon from "../../assets/arrow-back-16px.svg";
 import MenuIcon from "../../assets/menu-16px.svg";
+import HistoryIcon from "../../assets/history-16px.svg";
 import Notifications from "./Notifications";
 import classnames from "classnames";
 import { Typography } from "@cognigy/chat-components";
@@ -69,6 +70,12 @@ const BackButtonWrapper = styled.div(() => ({
 	gap: 24,
 }));
 
+const HeaderTitle = styled(Typography)(({ theme }) => ({
+	color: getContrastColor(theme.backgroundWebchat, theme),
+	fontSize: 16,
+	fontWeight: 600,
+}));
+
 const HeaderIconsWrapper = styled.div(() => ({
 	display: "flex",
 	alignItems: "flex-start",
@@ -106,11 +113,13 @@ interface HeaderProps {
 	logoUrl?: string;
 	isChatOptionsButtonVisible?: boolean;
 	isDeleteAllConversationsButtonVisible?: boolean;
+	isPrevConversationsButtonVisible?: boolean;
 	onDeleteAllConversations?: () => void;
 	onClose?: () => void;
 	onMinimize?: () => void;
 	onGoBack?: () => void;
 	onSetShowChatOptionsScreen?: (show: boolean) => void;
+	onSetShowPrevConversations?: (show: boolean) => void;
 	closeButtonRef?: React.RefObject<HTMLButtonElement>;
 	menuButtonRef?: React.RefObject<HTMLButtonElement>;
 	deleteButtonRef?: React.RefObject<HTMLButtonElement>;
@@ -128,10 +137,12 @@ const Header: FC<HeaderProps> = props => {
 		onMinimize,
 		onGoBack,
 		onSetShowChatOptionsScreen,
+		onSetShowPrevConversations,
 		closeButtonRef,
 		menuButtonRef,
 		chatToggleButtonRef,
 		isChatOptionsButtonVisible,
+		isPrevConversationsButtonVisible,
 		hideBackButton,
 		showChatScreen,
 		onDeleteAllConversations,
@@ -167,6 +178,11 @@ const Header: FC<HeaderProps> = props => {
 					</BackButtonWrapper>
 				)}
 				<div className={classnames("webchat-header-logo-name-container")}>
+					{title && (
+						<HeaderTitle variant="title1-semibold" component="h1" className="webchat-header-title">
+							{title}
+						</HeaderTitle>
+					)}
 				</div>
 				<HeaderIconsWrapper>
 					{rest.isDeleteAllConversationsButtonVisible && (
@@ -184,6 +200,19 @@ const Header: FC<HeaderProps> = props => {
 							<DeleteIcon></DeleteIcon>
 						</HeaderIconButton>
 					)}
+					{
+						// Previous Conversations Button
+						isPrevConversationsButtonVisible && (
+							<HeaderIconButton
+								data-header-history-button
+								onClick={() => onSetShowPrevConversations?.(true)}
+								aria-label={ariaLabels?.previousConversations ?? "Previous conversations"}
+								className="webchat-header-history-button"
+							>
+								<HistoryIcon />
+							</HeaderIconButton>
+						)
+					}
 					{
 						// Menu Button
 						isChatOptionsButtonVisible && (

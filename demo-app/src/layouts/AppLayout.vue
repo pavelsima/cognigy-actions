@@ -133,61 +133,47 @@ const handleToggleCXoneChat = async () => {
 <style scoped>
 .app-shell {
   min-height: 100vh;
-  padding: clamp(1rem, 2vw, 1.5rem);
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  transition: margin-right 0.3s ease;
+  gap: 0;
 }
 
 .app-shell.sidebar-open {
-  margin-right: 700px;
+  margin-right: 500px;
 }
 
 .main-layout {
   display: flex;
-  gap: 1rem;
+  gap: 0;
   flex: 1;
   min-height: 0;
 }
 
 .content-panel {
-  padding: clamp(1.25rem, 2vw, 2rem);
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 12px;
   flex: 1;
   min-width: 0;
   overflow: auto;
+  border-radius: 0;
 }
 
 .chat-sidebar {
   position: fixed;
   top: 0;
   right: 0;
-  width: 700px;
+  width: 500px;
   height: 100dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   padding: 0;
   border-radius: 0;
-  border: 0;
-}
-
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: var(--text-secondary, #6B7280);
-  padding: 0 0.25rem;
-  line-height: 1;
-}
-
-.close-btn:hover {
-  color: var(--text-primary, #1F2937);
+  border-left: 1px solid #d1d1d1;
+  background: #fff;
 }
 
 .chat-container {
@@ -198,24 +184,23 @@ const handleToggleCXoneChat = async () => {
 
 .token-input {
   font-family: inherit;
-  font-size: 0.875rem;
-  padding: 0.65rem 1rem;
-  border: 1px solid var(--cxone-ghost-border);
-  border-radius: 999px;
-  background: var(--cxone-panel-surface);
-  color: var(--cxone-text);
-  min-width: 200px;
-  max-width: 300px;
-  transition: border-color 0.2s ease;
+  font-size: 12px;
+  padding: 6px 10px;
+  border: 1px solid #d1d1d1;
+  border-radius: 3px;
+  background: #fff;
+  color: #333;
+  min-width: 180px;
+  max-width: 250px;
 }
 
 .token-input::placeholder {
-  color: var(--cxone-muted-text);
+  color: #999;
 }
 
 .token-input:focus {
-  outline: none;
-  border-color: var(--cxone-primary);
+  outline: 1px solid #0066cc;
+  border-color: #0066cc;
 }
 
 /* Responsive: stack on smaller screens */

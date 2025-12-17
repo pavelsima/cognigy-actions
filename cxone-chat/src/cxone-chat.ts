@@ -19,9 +19,6 @@ const CONFIG = {
   // Cognigy Webchat script URL (injected at build time)
   WEBCHAT_SCRIPT: process.env.WEBCHAT_URL,
 
-  // Backend for conversation persistence (injected at build time, empty = same origin)
-  BACKEND_URL: process.env.BACKEND_URL,
-
   // CXone Theming - Following CXone Conversation UI Guidelines
   // Property names must match webchat's IWebchatTheme interface
   THEME: {
@@ -38,6 +35,9 @@ const CONFIG = {
 
 // Runtime endpoint (set during init)
 let currentEndpoint: string = '';
+
+// Runtime sync URL (set during init, empty = syncing disabled)
+let currentSyncUrl: string = '';
 
 // ============================================================================
 // Types
@@ -82,6 +82,8 @@ export interface CXOneChatConfig {
   cxoneToken?: string;
   /** Optional: Home screen configuration */
   homeScreen?: HomeScreenConfig;
+  /** Optional: Backend URL for conversation persistence. If not provided, syncing is disabled and webchat uses only localStorage */
+  syncUrl?: string;
 }
 
 export interface WebchatAnalyticsEvent {
@@ -94,6 +96,7 @@ export interface WebchatAnalyticsEvent {
 }
 
 export interface CXOneChatInstance {
+  // === Core methods (original facade) ===
   /** Open the chat widget */
   open: () => void;
   /** Close the chat widget */
@@ -108,6 +111,26 @@ export interface CXOneChatInstance {
   getSessionId: () => string;
   /** Register analytics service handler - same API as Cognigy webchat */
   registerAnalyticsService: (handler: (event: WebchatAnalyticsEvent) => void) => void;
+
+  // === Extended methods (from original Webchat) ===
+  /** Reconnect to the websocket */
+  connect: () => Promise<void>;
+  /** Display a toast notification */
+  showNotification: (message: string) => void;
+  /** Programmatically start a new conversation (shows chat screen) */
+  startConversation: () => void;
+  /** Listen to socket events (e.g., 'typingStatus', 'finalPing') */
+  on: (event: string, handler: (data: unknown) => void) => void;
+  /** Listen to incoming bot messages */
+  onMessage: (handler: (message: unknown) => void) => void;
+  /** Update webchat settings at runtime */
+  updateSettings: (settings: Record<string, unknown>) => void;
+  /** End current session and start fresh */
+  endSession: () => void;
+
+  // === Raw access (for power users) ===
+  /** Access underlying Cognigy webchat instance (use with caution) */
+  readonly webchat: WebchatInstance | null;
 }
 
 interface Conversation {
@@ -123,11 +146,23 @@ interface Conversation {
 }
 
 interface WebchatInstance {
+  // Core methods
   open: () => void;
   close: () => void;
   toggle: () => void;
-  sendMessage: (text: string, data?: Record<string, unknown>) => void;
+  sendMessage: (text: string, data?: Record<string, unknown>, options?: unknown) => void;
   registerAnalyticsService: (handler: (event: { type: string; payload?: unknown }) => void) => void;
+
+  // Extended methods
+  connect: () => Promise<void>;
+  showNotification: (message: string) => void;
+  startConversation: () => void;
+  on: (event: string, handler: (data: unknown) => void) => void;
+  onMessage: (handler: (message: unknown) => void) => void;
+  updateSettings: (settings: unknown) => void;
+  endSession: () => void;
+
+  // Internal access
   store?: {
     getState: () => {
       options?: {
@@ -136,6 +171,8 @@ interface WebchatInstance {
       };
     };
   };
+  client?: unknown;
+  analytics?: unknown;
 }
 
 declare global {
@@ -156,7 +193,6 @@ function detectUserId(): string {
   // 1. Try localStorage (CXone standard key)
   const cxoneUserId = localStorage.getItem('cxone-user-id');
   if (cxoneUserId) {
-    console.log('[CXOneChat] Using userId from localStorage (cxone-user-id)');
     return cxoneUserId;
   }
 
@@ -165,7 +201,6 @@ function detectUserId(): string {
   for (const key of authKeys) {
     const value = localStorage.getItem(key);
     if (value) {
-      console.log(`[CXOneChat] Using userId from localStorage (${key})`);
       return value;
     }
   }
@@ -179,7 +214,6 @@ function detectUserId(): string {
         const parsed = JSON.parse(value);
         const id = parsed.userId || parsed.user_id || parsed.id || parsed.sub || parsed.uid;
         if (id) {
-          console.log(`[CXOneChat] Using userId from localStorage JSON (${key})`);
           return String(id);
         }
       } catch {
@@ -193,7 +227,6 @@ function detectUserId(): string {
   for (const cookie of cookies) {
     const [name, value] = cookie.trim().split('=');
     if (['userId', 'user_id', 'uid'].includes(name) && value) {
-      console.log(`[CXOneChat] Using userId from cookie (${name})`);
       return decodeURIComponent(value);
     }
   }
@@ -201,7 +234,6 @@ function detectUserId(): string {
   // 5. Generate new ID and store it
   const newUserId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
   localStorage.setItem('cxone-user-id', newUserId);
-  console.log('[CXOneChat] Generated new userId:', newUserId);
   return newUserId;
 }
 
@@ -242,9 +274,12 @@ function writeConversationsToStorage(
 // ============================================================================
 
 async function fetchConversations(userId: string): Promise<Conversation[]> {
+  if (!currentSyncUrl) {
+    return [];
+  }
   try {
     const response = await fetch(
-      `${CONFIG.BACKEND_URL}/api/conversations?userId=${encodeURIComponent(userId)}`
+      `${currentSyncUrl}/api/conversations?userId=${encodeURIComponent(userId)}`
     );
     if (!response.ok) return [];
     return await response.json();
@@ -259,6 +294,9 @@ async function fetchConversations(userId: string): Promise<Conversation[]> {
  * This is more reliable than capturing individual events since localStorage is the source of truth
  */
 async function syncConversationToBackend(userId: string, sessionId: string): Promise<void> {
+  if (!currentSyncUrl) {
+    return;
+  }
   try {
     const endpointToken = extractEndpointToken(currentEndpoint);
     const storageKey = getWebchatStorageKey(userId, sessionId, endpointToken);
@@ -273,7 +311,7 @@ async function syncConversationToBackend(userId: string, sessionId: string): Pro
       return;
     }
 
-    await fetch(`${CONFIG.BACKEND_URL}/api/conversations/sync`, {
+    await fetch(`${currentSyncUrl}/api/conversations/sync`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -289,8 +327,11 @@ async function syncConversationToBackend(userId: string, sessionId: string): Pro
 }
 
 async function createSession(userId: string, sessionId: string): Promise<void> {
+  if (!currentSyncUrl) {
+    return;
+  }
   try {
-    await fetch(`${CONFIG.BACKEND_URL}/api/conversations/session`, {
+    await fetch(`${currentSyncUrl}/api/conversations/session`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId, sessionId }),
@@ -355,11 +396,10 @@ const CXOneChat = {
    */
   async init(config: CXOneChatConfig): Promise<CXOneChatInstance> {
     if (instance) {
-      console.warn('[CXOneChat] Already initialized');
       return instance;
     }
 
-    const { endpoint, context, userId, container, embedded, onEmbeddedClose, cxoneToken, homeScreen: homeScreenConfig } = config;
+    const { endpoint, context, userId, container, embedded, onEmbeddedClose, cxoneToken, homeScreen: homeScreenConfig, syncUrl } = config;
 
     if (!endpoint) {
       throw new Error('[CXOneChat] endpoint is required');
@@ -372,25 +412,23 @@ const CXOneChat = {
     currentEndpoint = endpoint;
     currentContext = context;
     currentUserId = userId || detectUserId();
-
-    console.log(`[CXOneChat] Initializing for context: ${currentContext}, userId: ${currentUserId}${embedded ? ', embedded mode' : ''}`);
+    currentSyncUrl = syncUrl || '';
 
     try {
       const endpointToken = extractEndpointToken(currentEndpoint);
 
-      // Step 1: Pre-load conversations from backend
-      console.log('[CXOneChat] Loading previous conversations...');
-      const conversations = await fetchConversations(currentUserId);
-      if (conversations.length > 0) {
-        console.log(`[CXOneChat] Loaded ${conversations.length} conversations`);
-        writeConversationsToStorage(currentUserId, endpointToken, conversations);
+      // Step 1: Pre-load conversations from backend (if syncing enabled)
+      if (currentSyncUrl) {
+        const conversations = await fetchConversations(currentUserId);
+        if (conversations.length > 0) {
+          writeConversationsToStorage(currentUserId, endpointToken, conversations);
+        }
       }
 
       // Ensure userId is stored for webchat
       localStorage.setItem('visitorIdentifier', JSON.stringify({ visitorIdentifier: currentUserId }));
 
       // Step 2: Load Cognigy Webchat script
-      console.log('[CXOneChat] Loading webchat...');
       await loadScript(CONFIG.WEBCHAT_SCRIPT);
 
       // Wait for initWebchat to be available
@@ -409,7 +447,6 @@ const CXOneChat = {
       });
 
       // Step 3: Initialize webchat with CXone theme
-      console.log('[CXOneChat] Configuring webchat...');
       webchatInstance = await window.initWebchat(currentEndpoint, {
         userId: currentUserId,
         container,
@@ -519,6 +556,7 @@ const CXOneChat = {
 
       // Step 6: Build instance
       instance = {
+        // === Core methods (original facade) ===
         open: () => webchatInstance?.open(),
         close: () => webchatInstance?.close(),
         toggle: () => webchatInstance?.toggle(),
@@ -528,15 +566,41 @@ const CXOneChat = {
         registerAnalyticsService: (handler) => {
           analyticsHandlers.push(handler);
         },
+
+        // === Extended methods (from original Webchat) ===
+        connect: async () => {
+          await webchatInstance?.connect();
+        },
+        showNotification: (message) => {
+          webchatInstance?.showNotification(message);
+        },
+        startConversation: () => {
+          webchatInstance?.startConversation();
+        },
+        on: (event, handler) => {
+          webchatInstance?.on(event, handler);
+        },
+        onMessage: (handler) => {
+          webchatInstance?.onMessage(handler);
+        },
+        updateSettings: (settings) => {
+          webchatInstance?.updateSettings(settings);
+        },
+        endSession: () => {
+          webchatInstance?.endSession();
+        },
+
+        // === Raw access (for power users) ===
+        get webchat() {
+          return webchatInstance;
+        },
       };
 
       // Step 7: Auto-open in embedded mode (since there's no FAB button)
       if (embedded) {
-        console.log('[CXOneChat] Embedded mode - auto-opening webchat');
         webchatInstance.open();
       }
 
-      console.log('[CXOneChat] Ready!');
       return instance;
     } catch (error) {
       console.error('[CXOneChat] Initialization failed:', error);
@@ -588,6 +652,76 @@ const CXOneChat = {
   /** Check if initialized */
   isInitialized(): boolean {
     return instance !== null;
+  },
+
+  // === Extended methods (from original Webchat) ===
+
+  /** Reconnect to the websocket */
+  async connect(): Promise<void> {
+    if (!instance) {
+      console.warn('[CXOneChat] Not initialized. Call CXOneChat.init() first.');
+      return;
+    }
+    await instance.connect();
+  },
+
+  /** Display a toast notification */
+  showNotification(message: string): void {
+    if (!instance) {
+      console.warn('[CXOneChat] Not initialized. Call CXOneChat.init() first.');
+      return;
+    }
+    instance.showNotification(message);
+  },
+
+  /** Programmatically start a new conversation (shows chat screen) */
+  startConversation(): void {
+    if (!instance) {
+      console.warn('[CXOneChat] Not initialized. Call CXOneChat.init() first.');
+      return;
+    }
+    instance.startConversation();
+  },
+
+  /** Listen to socket events */
+  on(event: string, handler: (data: unknown) => void): void {
+    if (!instance) {
+      console.warn('[CXOneChat] Not initialized. Call CXOneChat.init() first.');
+      return;
+    }
+    instance.on(event, handler);
+  },
+
+  /** Listen to incoming bot messages */
+  onMessage(handler: (message: unknown) => void): void {
+    if (!instance) {
+      console.warn('[CXOneChat] Not initialized. Call CXOneChat.init() first.');
+      return;
+    }
+    instance.onMessage(handler);
+  },
+
+  /** Update webchat settings at runtime */
+  updateSettings(settings: Record<string, unknown>): void {
+    if (!instance) {
+      console.warn('[CXOneChat] Not initialized. Call CXOneChat.init() first.');
+      return;
+    }
+    instance.updateSettings(settings);
+  },
+
+  /** End current session and start fresh */
+  endSession(): void {
+    if (!instance) {
+      console.warn('[CXOneChat] Not initialized. Call CXOneChat.init() first.');
+      return;
+    }
+    instance.endSession();
+  },
+
+  /** Get the underlying webchat instance (for power users) */
+  getWebchat(): WebchatInstance | null {
+    return webchatInstance;
   },
 };
 

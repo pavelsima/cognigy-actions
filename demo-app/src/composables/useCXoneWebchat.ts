@@ -1,24 +1,39 @@
-import { ref } from 'vue'
-import router from '@/router'
-import { useTableData } from './useTableData'
+import { ref, shallowRef } from 'vue'
 
 /**
- * CXone AI Webchat Integration
+ * Vue Composable for CXOneChat Integration
  *
- * Uses the standalone CXone Chat script for one-liner initialization.
- * The script handles everything: loading Cognigy, backend sync, theming.
+ * This is a showcase example of how to integrate CXOneChat wrapper
+ * into a Vue application using the Composition API.
+ *
+ * @example
+ * ```vue
+ * <script setup>
+ * import { useCXoneWebchat } from '@/composables/useCXoneWebchat'
+ *
+ * const { status, init, open, sendMessage } = useCXoneWebchat()
+ *
+ * onMounted(() => {
+ *   init({ endpoint: '...', context: 'myapp' })
+ * })
+ * </script>
+ * ```
  */
 
-// Path to the CXone Chat script
-// In production, this would be a CDN URL
+// ============================================================================
+// Configuration
+// ============================================================================
+
 const CXONE_CHAT_SCRIPT = '/cxone-chat/cxone-chat.js'
+const DEFAULT_ENDPOINT = 'https://endpoint-dev.cognigy.ai/ea50316a5a49e574da804c75175ce5ea671ba2e15ddd228076dd0d6e339af6c6'
 
-// Default Cognigy endpoint (can be overridden in init)
-const DEFAULT_COGNIGY_ENDPOINT = 'https://endpoint-dev.cognigy.ai/ea50316a5a49e574da804c75175ce5ea671ba2e15ddd228076dd0d6e339af6c6'
+// ============================================================================
+// Types (mirrors CXOneChat types for TypeScript support)
+// ============================================================================
 
-type LoaderStatus = 'idle' | 'loading' | 'ready' | 'error'
+type Status = 'idle' | 'loading' | 'ready' | 'error'
 
-type WebchatAnalyticsEvent = {
+interface AnalyticsEvent {
   type: string
   payload?: {
     text?: string
@@ -27,83 +42,105 @@ type WebchatAnalyticsEvent = {
   }
 }
 
-interface CXOneChatInstance {
+interface ChatInstance {
+  // Core methods
   open: () => void
   close: () => void
   toggle: () => void
   sendMessage: (text: string, data?: Record<string, unknown>) => void
   getUserId: () => string
   getSessionId: () => string
-  registerAnalyticsService: (handler: (event: WebchatAnalyticsEvent) => void) => void
+  registerAnalyticsService: (handler: (event: AnalyticsEvent) => void) => void
+  // Extended methods
+  connect: () => Promise<void>
+  showNotification: (message: string) => void
+  startConversation: () => void
+  on: (event: string, handler: (data: unknown) => void) => void
+  onMessage: (handler: (message: unknown) => void) => void
+  updateSettings: (settings: Record<string, unknown>) => void
+  endSession: () => void
+  // Raw access
+  webchat: unknown
 }
 
-interface ConversationStarter {
-  title: string
-  payload?: string
-}
-
-interface HomeScreenConfig {
-  welcomeText?: string
-  subtitle?: string
-  suggestionsLabel?: string
-  inputPlaceholder?: string
-  conversationStarters?: ConversationStarter[]
-}
-
-interface CXOneChatConfig {
-  endpoint: string
-  context: string
+interface InitOptions {
+  /** Cognigy endpoint URL */
+  endpoint?: string
+  /** Application context sent to Cognigy */
+  context?: string
+  /** User ID (auto-detected if not provided) */
   userId?: string
+  /** Container element or selector for embedded mode */
   container?: HTMLElement | string
+  /** Enable embedded mode (relative positioning) */
   embedded?: boolean
+  /** Callback when close button clicked in embedded mode */
   onEmbeddedClose?: () => void
+  /** CXone Bearer token */
   cxoneToken?: string
-  homeScreen?: HomeScreenConfig
+  /** Backend URL for conversation sync (omit to disable) */
+  syncUrl?: string
+  /** Home screen configuration */
+  homeScreen?: {
+    welcomeText?: string
+    subtitle?: string
+    suggestionsLabel?: string
+    inputPlaceholder?: string
+    conversationStarters?: Array<{ title: string; payload?: string }>
+  }
 }
 
-interface CXOneChat {
-  init: (config: CXOneChatConfig) => Promise<CXOneChatInstance>
+interface CXOneChatGlobal {
+  init: (config: InitOptions & { endpoint: string; context: string }) => Promise<ChatInstance>
   open: () => void
   close: () => void
   toggle: () => void
   sendMessage: (text: string, data?: Record<string, unknown>) => void
   getUserId: () => string
   isInitialized: () => boolean
+  connect: () => Promise<void>
+  showNotification: (message: string) => void
+  startConversation: () => void
+  on: (event: string, handler: (data: unknown) => void) => void
+  onMessage: (handler: (message: unknown) => void) => void
+  updateSettings: (settings: Record<string, unknown>) => void
+  endSession: () => void
+  getWebchat: () => unknown
 }
 
 declare global {
   interface Window {
-    CXOneChat: CXOneChat
+    CXOneChat: CXOneChatGlobal
   }
 }
 
-const status = ref<LoaderStatus>('idle')
-const errorMessage = ref<string | null>(null)
-let chatInstance: CXOneChatInstance | null = null
-let analyticsAttached = false
-const { setTableData, setChartConfig, markChartReady } = useTableData()
+// ============================================================================
+// State (shared across all usages of this composable)
+// ============================================================================
 
-/**
- * Load the CXone Chat script
- */
+const status = ref<Status>('idle')
+const error = ref<string | null>(null)
+const instance = shallowRef<ChatInstance | null>(null)
+
+// ============================================================================
+// Script Loader
+// ============================================================================
+
 function loadScript(src: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    // Check if already loaded
     if (window.CXOneChat) {
       resolve()
       return
     }
 
-    if (document.querySelector(`script[src="${src}"]`)) {
-      // Script tag exists, wait for it to load
-      const checkLoaded = () => {
+    const existing = document.querySelector(`script[src="${src}"]`)
+    if (existing) {
+      const waitForLoad = setInterval(() => {
         if (window.CXOneChat) {
+          clearInterval(waitForLoad)
           resolve()
-        } else {
-          setTimeout(checkLoaded, 100)
         }
-      }
-      checkLoaded()
+      }, 50)
       return
     }
 
@@ -111,239 +148,213 @@ function loadScript(src: string): Promise<void> {
     script.src = src
     script.async = true
     script.onload = () => {
-      // Wait for CXOneChat to be available
-      const checkReady = () => {
+      const waitForGlobal = setInterval(() => {
         if (window.CXOneChat) {
+          clearInterval(waitForGlobal)
           resolve()
-        } else {
-          setTimeout(checkReady, 50)
         }
-      }
-      checkReady()
+      }, 50)
     }
-    script.onerror = () => reject(new Error(`Failed to load CXone Chat script: ${src}`))
+    script.onerror = () => reject(new Error(`Failed to load: ${src}`))
     document.head.appendChild(script)
   })
 }
 
-/**
- * Attach analytics logger to handle incoming messages
- * Same logic as useCognigyWebchat for handling table data, charts, email drafts, and route retrieval
- */
-const attachAnalyticsLogger = (instance: CXOneChatInstance | null) => {
-  console.log('[CXone Webchat] attachAnalyticsLogger called', {
-    analyticsAttached,
-    hasInstance: !!instance,
-    hasRegisterAnalyticsService: !!instance?.registerAnalyticsService,
-  })
-
-  if (analyticsAttached || !instance?.registerAnalyticsService) {
-    console.warn('[CXone Webchat] Skipping analytics attachment', { analyticsAttached })
-    return
-  }
-
-  console.log('[CXone Webchat] Registering analytics handler...')
-  instance.registerAnalyticsService((event) => {
-    console.log('[CXone Webchat] analytics event', event)
-
-    if (event.type !== 'webchat/incoming-message') {
-      return
-    }
-
-    console.log('[CXone Webchat] incoming message event', event)
-
-    const payloadData = event.payload?.data
-    console.log('[CXone Webchat] payload data', payloadData)
-
-    const hasTablePayload =
-      typeof payloadData === 'object' &&
-      payloadData !== null &&
-      (payloadData as Record<string, unknown>).hasTableData === true
-
-    if (hasTablePayload) {
-      const pluginData =
-        typeof payloadData === 'object' &&
-        payloadData !== null &&
-        (payloadData as Record<string, unknown>)._plugin &&
-        typeof (payloadData as Record<string, unknown>)._plugin === 'object'
-          ? ((payloadData as Record<string, unknown>)._plugin as Record<string, unknown>).data
-          : undefined
-
-      console.log('[CXone Webchat] storing table data from payload data property', pluginData)
-      setTableData(pluginData ?? null)
-    }
-
-    const shouldCreateChart =
-      typeof payloadData === 'object' &&
-      payloadData !== null &&
-      (payloadData as Record<string, unknown>).createChart === true
-
-    if (shouldCreateChart) {
-      console.log('[CXone Webchat] received createChart flag')
-
-      const chartConfigPayload =
-        typeof payloadData === 'object' &&
-        payloadData !== null &&
-        (payloadData as Record<string, unknown>).chartConfig &&
-        typeof (payloadData as Record<string, unknown>).chartConfig === 'object'
-          ? (payloadData as Record<string, unknown>).chartConfig
-          : null
-
-      if (chartConfigPayload) {
-        console.log('[CXone Webchat] storing chart configuration from payload data', chartConfigPayload)
-        setChartConfig(chartConfigPayload)
-      } else {
-        console.warn(
-          '[CXone Webchat] createChart flag received without a valid chartConfig object. Falling back to local chart configuration.',
-        )
-        setChartConfig(null)
-      }
-
-      markChartReady()
-      if (router.currentRoute.value.path !== '/insights') {
-        console.log('[CXone Webchat] redirecting to /insights')
-        router.push('/insights')
-      }
-    }
-
-    const shouldCreateEmailDraft =
-      typeof payloadData === 'object' &&
-      payloadData !== null &&
-      (payloadData as Record<string, unknown>).createEmailDraft === true
-
-    if (shouldCreateEmailDraft) {
-      console.log('[CXone Webchat] received createEmailDraft flag')
-      if (router.currentRoute.value.path !== '/email') {
-        console.log('[CXone Webchat] redirecting to /email')
-        router.push('/email')
-      }
-    }
-
-    const hasRetrieveRouteFlag =
-      typeof payloadData === 'object' &&
-      payloadData !== null &&
-      ((payloadData as Record<string, unknown>).retrieveRoute === true ||
-        (payloadData as Record<string, unknown>).retreiveRoute === true)
-
-    const shouldReturnRoute = Boolean(hasRetrieveRouteFlag)
-
-    console.log('[CXone Webchat] shouldReturnRoute', shouldReturnRoute)
-
-    if (!shouldReturnRoute) {
-      console.debug('[CXone Webchat] no retrieveRoute flag present, skipping reply')
-      return
-    }
-
-    if (typeof instance.sendMessage !== 'function') {
-      console.warn('[CXone Webchat] sendMessage is not available on the webchat instance')
-      return
-    }
-
-    const currentRoute = router.currentRoute.value
-    const routeDescriptor =
-      currentRoute?.fullPath ??
-      currentRoute?.path ??
-      (typeof currentRoute?.name === 'string' ? currentRoute.name : null) ??
-      '/'
-
-    console.log('[CXone Webchat] sending currentRoute payload', routeDescriptor)
-
-    instance.sendMessage('', {
-      currentRoute: routeDescriptor,
-    })
-
-    console.log('[CXone Webchat] sent currentRoute payload', routeDescriptor)
-  })
-
-  analyticsAttached = true
-  console.log('[CXone Webchat] Analytics handler registered successfully')
-}
-
-/**
- * Initialize CXone Webchat
- * @param options Optional configuration for endpoint, container, embedded mode, close callback, and cxoneToken
- */
-const init = async (options?: {
-  endpoint?: string
-  container?: HTMLElement | string
-  embedded?: boolean
-  onEmbeddedClose?: () => void
-  cxoneToken?: string
-  homeScreen?: HomeScreenConfig
-}) => {
-  if (status.value === 'loading' || status.value === 'ready') return
-
-  status.value = 'loading'
-  errorMessage.value = null
-
-  try {
-    // Load the CXone Chat script
-    console.log('[CXone Webchat] Loading CXone Chat script...')
-    await loadScript(CXONE_CHAT_SCRIPT)
-
-    // Initialize with container/embedded options if provided
-    console.log('[CXone Webchat] Initializing...', options)
-    chatInstance = await window.CXOneChat.init({
-      endpoint: options?.endpoint || DEFAULT_COGNIGY_ENDPOINT,
-      context: 'actions',
-      container: options?.container,
-      embedded: options?.embedded,
-      onEmbeddedClose: options?.onEmbeddedClose,
-      cxoneToken: options?.cxoneToken,
-      homeScreen: options?.homeScreen,
-    })
-
-    // Attach analytics logger for handling events
-    attachAnalyticsLogger(chatInstance)
-
-    status.value = 'ready'
-    console.log('[CXone Webchat] Ready!')
-  } catch (error) {
-    status.value = 'error'
-    errorMessage.value = error instanceof Error ? error.message : 'Failed to initialize CXone Chat'
-    console.error('[CXone Webchat] Initialization failed:', error)
-  }
-}
-
-const open = () => {
-  chatInstance?.open()
-}
-
-const close = () => {
-  chatInstance?.close()
-}
-
-const toggle = () => {
-  chatInstance?.toggle()
-}
-
-const sendMessage = (text: string, data?: Record<string, unknown>) => {
-  chatInstance?.sendMessage(text, data)
-}
-
-const registerAnalyticsService = (handler: (event: WebchatAnalyticsEvent) => void) => {
-  chatInstance?.registerAnalyticsService(handler)
-}
-
-const getUserId = () => {
-  return chatInstance?.getUserId() ?? ''
-}
-
-const getSessionId = () => {
-  return chatInstance?.getSessionId() ?? ''
-}
+// ============================================================================
+// Composable
+// ============================================================================
 
 export function useCXoneWebchat() {
+  /**
+   * Initialize CXOneChat
+   */
+  async function init(options: InitOptions = {}) {
+    if (status.value === 'loading' || status.value === 'ready') {
+      return instance.value
+    }
+
+    status.value = 'loading'
+    error.value = null
+
+    try {
+      await loadScript(CXONE_CHAT_SCRIPT)
+
+      instance.value = await window.CXOneChat.init({
+        endpoint: options.endpoint || DEFAULT_ENDPOINT,
+        context: options.context || 'demo',
+        userId: options.userId,
+        container: options.container,
+        embedded: options.embedded,
+        onEmbeddedClose: options.onEmbeddedClose,
+        cxoneToken: options.cxoneToken,
+        syncUrl: options.syncUrl,
+        homeScreen: options.homeScreen,
+      })
+
+      status.value = 'ready'
+      return instance.value
+    } catch (err) {
+      status.value = 'error'
+      error.value = err instanceof Error ? err.message : 'Initialization failed'
+      throw err
+    }
+  }
+
+  // ===========================================================================
+  // Core Methods
+  // ===========================================================================
+
+  function open() {
+    instance.value?.open()
+  }
+
+  function close() {
+    instance.value?.close()
+  }
+
+  function toggle() {
+    instance.value?.toggle()
+  }
+
+  function sendMessage(text: string, data?: Record<string, unknown>) {
+    instance.value?.sendMessage(text, data)
+  }
+
+  // ===========================================================================
+  // User & Session
+  // ===========================================================================
+
+  function getUserId(): string {
+    return instance.value?.getUserId() ?? ''
+  }
+
+  function getSessionId(): string {
+    return instance.value?.getSessionId() ?? ''
+  }
+
+  // ===========================================================================
+  // Analytics & Events
+  // ===========================================================================
+
+  /**
+   * Register handler for all webchat analytics events
+   * @example
+   * registerAnalyticsService((event) => {
+   *   if (event.type === 'webchat/incoming-message') {
+   *     console.log('Bot message:', event.payload)
+   *   }
+   * })
+   */
+  function registerAnalyticsService(handler: (event: AnalyticsEvent) => void) {
+    instance.value?.registerAnalyticsService(handler)
+  }
+
+  /**
+   * Listen to incoming bot messages
+   * @example
+   * onMessage((message) => console.log('Message:', message))
+   */
+  function onMessage(handler: (message: unknown) => void) {
+    instance.value?.onMessage(handler)
+  }
+
+  /**
+   * Listen to socket events
+   * @example
+   * on('typingStatus', (data) => console.log('Typing:', data))
+   */
+  function on(event: string, handler: (data: unknown) => void) {
+    instance.value?.on(event, handler)
+  }
+
+  // ===========================================================================
+  // Extended Methods
+  // ===========================================================================
+
+  /**
+   * Reconnect websocket
+   */
+  async function connect() {
+    await instance.value?.connect()
+  }
+
+  /**
+   * Display toast notification
+   */
+  function showNotification(message: string) {
+    instance.value?.showNotification(message)
+  }
+
+  /**
+   * Start new conversation (shows chat screen from home)
+   */
+  function startConversation() {
+    instance.value?.startConversation()
+  }
+
+  /**
+   * Update webchat settings at runtime
+   * @example
+   * updateSettings({ colors: { primaryColor: '#FF0000' } })
+   */
+  function updateSettings(settings: Record<string, unknown>) {
+    instance.value?.updateSettings(settings)
+  }
+
+  /**
+   * End current session and clear messages
+   */
+  function endSession() {
+    instance.value?.endSession()
+  }
+
+  // ===========================================================================
+  // Raw Access
+  // ===========================================================================
+
+  /**
+   * Get underlying webchat instance for advanced usage
+   */
+  function getWebchat() {
+    return instance.value?.webchat ?? null
+  }
+
+  // ===========================================================================
+  // Return
+  // ===========================================================================
+
   return {
+    // State (reactive)
     status,
-    errorMessage,
+    error,
+    instance,
+
+    // Initialization
     init,
+
+    // Core
     open,
     close,
     toggle,
     sendMessage,
-    registerAnalyticsService,
+
+    // User & Session
     getUserId,
     getSessionId,
+
+    // Analytics & Events
+    registerAnalyticsService,
+    onMessage,
+    on,
+
+    // Extended
+    connect,
+    showNotification,
+    startConversation,
+    updateSettings,
+    endSession,
+
+    // Raw access
+    getWebchat,
   }
 }

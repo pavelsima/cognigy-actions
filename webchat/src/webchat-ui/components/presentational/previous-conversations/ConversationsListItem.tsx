@@ -3,7 +3,7 @@ import styled from "@emotion/styled";
 import ArrowIcon from "../../../assets/arrow-back-16px.svg";
 import CognigyAIAvatar from "../../../../assets/icons/pixie_dust.svg";
 import Ellipsis from "../../../assets/ellipsis-4px.svg";
-import { getAvatars, getLastMessagePreview, getParticipants, getRelativeTime } from "./helpers";
+import { getLastMessagePreview, getParticipants, getRelativeTime } from "./helpers";
 import { IWebchatConfig } from "../../../../common/interfaces/webchat-config";
 import { PrevConversationsState } from "../../../../webchat/store/previous-conversations/previous-conversations-reducer";
 import { Typography } from "@cognigy/chat-components";
@@ -20,9 +20,14 @@ const ListItem = styled.div(({ theme }) => ({
 	cursor: "pointer",
 	justifyContent: "space-between",
 	alignItems: "center",
+	outline: "2px solid transparent",
+	outlineOffset: -2,
+	transition: "outline-color 0.15s ease",
+	":hover, :focus": {
+		outline: `2px solid ${theme.primaryColor}`,
+	},
 	":focus": {
-		border: `2px solid ${theme.primaryColorFocus}`,
-		outline: "none",
+		outlineColor: theme.primaryColorFocus,
 	},
 }));
 
@@ -69,26 +74,12 @@ const Right = styled.div(({ theme }) => ({
 	},
 }));
 
-const Avatar = styled.img(({ theme }) => ({
-	borderRadius: "50%",
-	width: "28px",
-	height: "28px",
-	backgroundColor: theme.primaryColor,
-	boxSizing: "border-box",
-	border: `2px solid ${theme.white}`,
-	overflow: "hidden",
-	position: "relative",
-	":not(:last-child)": {
-		marginLeft: "-12px",
+const PixieIcon = styled(CognigyAIAvatar)(({ theme }) => ({
+	width: "32px",
+	height: "32px",
+	"& path": {
+		fill: theme.primaryColor || "#0C3985",
 	},
-}));
-
-const FallBackAvatar = styled(CognigyAIAvatar)(({ theme }) => ({
-	borderRadius: "50%",
-	width: "28px",
-	height: "28px",
-	boxSizing: "border-box",
-	border: `2px solid ${theme.white}`,
 }));
 
 interface IConversationsListItemProps {
@@ -103,8 +94,6 @@ export const ConversationsListItem = (props: IConversationsListItemProps) => {
 	const { sessionId, conversation, config, index, switchSession } = props;
 
 	const messages = conversation.messages as IMessage[];
-
-	const avatars = getAvatars(messages);
 
 	const handleClick = () => {
 		switchSession(sessionId, conversation);
@@ -130,23 +119,7 @@ export const ConversationsListItem = (props: IConversationsListItemProps) => {
 			aria-label={`${openConversationAriaLabel} ${index + 1}`}
 		>
 			<Left>
-				{avatars.length > 0 ? (
-					avatars.map((avatar, i) => {
-						if (!avatar)
-							return (
-								<FallBackAvatar
-									title="Cognigy.AI Logo"
-									role="img"
-									key={i}
-									className="webchat-header-cognigy-logo"
-								/>
-							);
-
-						return <Avatar key={i} src={avatar} alt="" />;
-					})
-				) : (
-					<FallBackAvatar title="Cognigy.AI Logo" />
-				)}
+				<PixieIcon title="AI Assistant" role="img" />
 			</Left>
 			<Center>
 				<CenterTitle variant="body-regular" component="div">

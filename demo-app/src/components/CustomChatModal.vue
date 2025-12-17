@@ -296,22 +296,20 @@ onUnmounted(() => {
 <style scoped>
 .custom-chat-widget {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
+  bottom: 0;
+  right: 0;
   z-index: 1000;
-  width: 550px;
-  height: 700px;
-  min-height: 780px;
-  max-height: calc(100vh - 40px);
+  width: 500px;
+  height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
 .custom-chat-widget-container {
-  background: var(--cxone-panel-surface);
-  border: 1px solid var(--cxone-panel-border);
-  border-radius: 28px;
-  box-shadow: var(--cxone-panel-shadow);
+  background: #fff;
+  border-left: 1px solid #d1d1d1;
+  border-radius: 0;
+  box-shadow: none;
   width: 100%;
   height: 100%;
   display: flex;
@@ -330,7 +328,7 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   display: block;
-  min-height: 780px;
+  min-height: 100%;
 }
 
 /* Also target the element directly */
@@ -338,7 +336,7 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   display: block;
-  min-height: 780px;
+  min-height: 100%;
 }
 
 .sdk-error {
@@ -347,26 +345,27 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  padding: 16px;
   text-align: center;
-  color: var(--cxone-muted-text);
+  color: #666;
 }
 
 .sdk-error p {
-  margin: 0.5rem 0;
+  margin: 4px 0;
+  font-size: 12px;
 }
 
 .sdk-error-hint {
-  font-size: 0.875rem;
-  margin-top: 1rem !important;
+  font-size: 11px;
+  margin-top: 8px !important;
 }
 
 .sdk-error code {
-  background: rgba(12, 57, 133, 0.1);
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 2px;
   font-family: 'Courier New', monospace;
-  font-size: 0.875rem;
+  font-size: 11px;
 }
 
 .loading-sdk {
@@ -375,15 +374,15 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   height: 100%;
-  gap: 1rem;
-  color: var(--cxone-muted-text);
+  gap: 12px;
+  color: #666;
 }
 
 .loading-sdk .spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid #e0e0e0;
-  border-top-color: #3B5EFF;
+  width: 24px;
+  height: 24px;
+  border: 2px solid #e0e0e0;
+  border-top-color: #0066cc;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -394,7 +393,7 @@ onUnmounted(() => {
 
 .loading-sdk p {
   margin: 0;
-  font-size: 0.875rem;
+  font-size: 12px;
 }
 </style>
 

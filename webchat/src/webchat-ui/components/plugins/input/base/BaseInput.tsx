@@ -263,6 +263,7 @@ interface IBaseInputProps extends InputComponentProps {
 	onSetFileList: (fileList: IFile[]) => void;
 	onAddFilesToList: (fileList: File[]) => void;
 	webchatSpeechTimeoutRef?: React.RefObject<NodeJS.Timeout>;
+	disabled?: boolean;
 }
 
 declare global {
@@ -441,6 +442,9 @@ export class BaseInput extends React.PureComponent<IBaseInputProps, IBaseInputSt
 	handleSubmit: React.FormEventHandler = e => {
 		e.preventDefault();
 		e.stopPropagation();
+
+		// Don't submit if disabled (bot is responding)
+		if (this.props.disabled) return;
 
 		const { text, speechResult } = this.state;
 		const { sttActive, fileList } = this.props;
@@ -727,6 +731,7 @@ export class BaseInput extends React.PureComponent<IBaseInputProps, IBaseInputSt
 								<SendButtonContainer
 									type="submit"
 									disabled={
+										this.props.disabled ||
 										(this.state.text === "" && isFileListEmpty) ||
 										fileUploadError
 									}

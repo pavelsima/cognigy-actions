@@ -42,7 +42,7 @@ const ChatLog = styled.div(({ theme }) => ({
 }));
 
 const ScrollButton = styled("button")(({ theme }) => ({
-	position: "absolute",
+	position: "fixed",
 	zIndex: 10,
 	bottom: "110px",
 	left: "50%",
@@ -100,6 +100,18 @@ export function ChatScroller({
 	useEffect(() => {
 		setUserScrolledToBottom(false);
 	}, [lastInputId]);
+
+	// Scroll to bottom on initial mount
+	useEffect(() => {
+		if (outerRef.current) {
+			// Use requestAnimationFrame to ensure DOM is fully rendered
+			requestAnimationFrame(() => {
+				if (outerRef.current) {
+					outerRef.current.scrollTop = outerRef.current.scrollHeight;
+				}
+			});
+		}
+	}, []);
 
 	const handleFocus = () => {
 		if (innerRef.current === document.activeElement) {

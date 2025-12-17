@@ -5,11 +5,11 @@ import CustomMessageHeader from "./CustomMessageHeader";
 import { IMessage } from "../../../common/interfaces/message";
 
 const GroupWrapper = styled.div<{ isBot: boolean }>(({ isBot }) => ({
-	maxWidth: "80%",
-	marginLeft: 16,
-	marginRight: 16,
-	marginTop: 8,
-	marginBottom: 8,
+	maxWidth: "85%",
+	marginLeft: 12,
+	marginRight: 12,
+	marginTop: 6,
+	marginBottom: 6,
 	// Hide the original message header from @cognigy/chat-components
 	"& .message-header": {
 		display: "none !important",
@@ -25,16 +25,17 @@ const GroupWrapper = styled.div<{ isBot: boolean }>(({ isBot }) => ({
 	},
 }));
 
-const HeaderContainer = styled.div(() => ({
-	marginBottom: 4,
-}));
-
 const MessagesContainer = styled.div<{ isBot: boolean }>(({ isBot }) => ({
 	backgroundColor: isBot ? "#F5F8FA" : "#FFFFFF",
 	border: "1px solid #D2D8DB",
 	borderRadius: 12,
 	padding: "12px 16px",
-	// Remove default styling from individual message bubbles inside
+
+	// Enforce consistent font size across all message types
+	fontSize: "16px",
+	lineHeight: "1.5",
+
+	// Remove default styling from individual message bubbles inside (chat-components)
 	"& [class*='_bubble']": {
 		border: "none !important",
 		background: "transparent !important",
@@ -42,21 +43,74 @@ const MessagesContainer = styled.div<{ isBot: boolean }>(({ isBot }) => ({
 		margin: "0 !important",
 		boxShadow: "none !important",
 		maxWidth: "100% !important",
+		fontSize: "inherit !important",
+	},
+	// More specific selector for chat-bubble class
+	"& .chat-bubble, & [class*='chat-bubble']": {
+		padding: "0 !important",
+		margin: "0 !important",
+		border: "none !important",
+		background: "transparent !important",
+		boxShadow: "none !important",
+		fontSize: "inherit !important",
 	},
 	"& [class*='_messageRow']": {
 		padding: "0 !important",
+		margin: "0 !important",
 	},
-	// Remove any inner container borders
-	"& .webchat-quick-reply-template-root": {
+	"& [class*='_content']": {
+		padding: "0 !important",
+		margin: "0 !important",
+	},
+	// Target incoming/outgoing bubble variants
+	"& [class*='_incoming'], & [class*='_outgoing']": {
+		padding: "0 !important",
+		margin: "0 !important",
+	},
+
+	// Reset all inner plugin containers
+	"& .webchat-quick-reply-template-root, & .webchat-buttons-template-root, & .custom-text-with-buttons": {
 		border: "none !important",
 		background: "transparent !important",
 		padding: "0 !important",
 		margin: "0 !important",
 	},
-	// Spacing between messages in the group (no separators)
-	"& .custom-message-wrapper:not(:last-child)": {
-		marginBottom: 8,
+
+	// Text message spacing
+	"& [class*='_text'], & .webchat-message-row, & .custom-text-with-buttons-text": {
+		padding: "0 !important",
+		margin: "0 !important",
 	},
+	"& p": {
+		margin: "0 0 4px 0 !important",
+		"&:last-child": {
+			marginBottom: "0 !important",
+		},
+	},
+
+	// Spacing between messages in the group
+	"& .custom-message-wrapper + .custom-message-wrapper": {
+		marginTop: 16,
+	},
+
+	// Override any nested divs padding and ensure consistent font
+	"& div[class*='_']": {
+		padding: "0 !important",
+		fontSize: "inherit !important",
+	},
+
+	// Ensure all text elements inherit font size
+	"& span, & div, & p": {
+		fontSize: "inherit",
+	},
+}));
+
+const TimestampFooter = styled.time(() => ({
+	display: "block",
+	fontSize: 11,
+	color: "#9CA3AF",
+	marginTop: 8,
+	textAlign: "right",
 }));
 
 const SingleMessageWrapper = styled.div(() => ({
@@ -114,17 +168,19 @@ const MessageGroup: FC<MessageGroupProps> = ({ messages, messageProps, allMessag
 		);
 	}
 
+	const formattedTime = new Date(timestamp).toLocaleTimeString([], {
+		hour: "2-digit",
+		minute: "2-digit",
+	});
+
 	// For bot/agent messages, render in grouped container
 	return (
 		<GroupWrapper isBot={isBot} className="message-group-wrapper">
-			<HeaderContainer>
+			<MessagesContainer isBot={isBot} className="message-group-container">
 				<CustomMessageHeader
 					source={source}
-					timestamp={timestamp}
 					name={avatarName}
 				/>
-			</HeaderContainer>
-			<MessagesContainer isBot={isBot} className="message-group-container">
 				{messages.map((message, idx) => {
 					const globalIndex = startIndex + idx;
 					const prevMessage = globalIndex > 0 ? allMessages[globalIndex - 1] : undefined;
@@ -138,6 +194,9 @@ const MessageGroup: FC<MessageGroupProps> = ({ messages, messageProps, allMessag
 						</div>
 					);
 				})}
+				<TimestampFooter className="message-group-timestamp">
+					{formattedTime}
+				</TimestampFooter>
 			</MessagesContainer>
 		</GroupWrapper>
 	);

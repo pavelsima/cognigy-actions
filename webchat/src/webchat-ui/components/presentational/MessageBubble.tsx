@@ -7,7 +7,13 @@ export default styled.div<IColorProps & IAlignmentProps>(({ color, theme, align 
 	const isUserMessage = align === "right";
 
 	return {
-		padding: `${theme.unitSize * 2}px ${theme.unitSize * 3}px`,
+		// No padding
+		padding: 0,
+
+		// Vertical margin between consecutive bubbles
+		"& + &": {
+			marginTop: 16,
+		},
 
 		// CXone typography: body3 with 20px line height
 		fontSize: "0.875rem", // 14px

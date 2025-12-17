@@ -73,6 +73,10 @@ const InputPluginRenderer = ({
 	...props
 }: InputProps): JSX.Element => {
 	const textActive = useSelector(state => state.input.textActive);
+	const typingIndicator = useSelector(state => state.ui.typing);
+
+	// Disable input when bot is typing/responding
+	const isBotResponding = typingIndicator === "show";
 
 	const attributes = Object.keys(props).length > 0 ? props : undefined;
 
@@ -91,6 +95,7 @@ const InputPluginRenderer = ({
 				attributes={attributes}
 				theme={webchatTheme}
 				onEmitAnalytics={emitAnalytics}
+				disabled={isBotResponding}
 			/>
 		);
 	}
@@ -135,6 +140,7 @@ const InputPluginRenderer = ({
 					attributes={attributes}
 					theme={webchatTheme}
 					onEmitAnalytics={emitAnalytics}
+					disabled={isBotResponding}
 				/>
 			)}
 			{/* Branding Logo Link */}

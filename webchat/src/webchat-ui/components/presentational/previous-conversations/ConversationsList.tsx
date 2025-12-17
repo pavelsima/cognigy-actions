@@ -36,6 +36,31 @@ const ConversationsList = styled.div(({ theme }) => ({
 	},
 }));
 
+const EmptyState = styled.div(({ theme }) => ({
+	display: "flex",
+	flexDirection: "column",
+	alignItems: "center",
+	justifyContent: "center",
+	height: "100%",
+	color: theme.black40,
+	textAlign: "center",
+	padding: "40px 20px",
+}));
+
+const EmptyStateTitle = styled.p(({ theme }) => ({
+	fontSize: 16,
+	fontWeight: 500,
+	color: theme.black20,
+	margin: "0 0 8px 0",
+}));
+
+const EmptyStateMessage = styled.p(({ theme }) => ({
+	fontSize: 14,
+	fontWeight: 400,
+	color: theme.black40,
+	margin: 0,
+}));
+
 const ConversationsListActions = styled.div(({ theme }) => ({
 	alignSelf: "flex-end",
 	display: "flex",
@@ -115,7 +140,7 @@ export const PrevConversationsList = (props: IPrevConversationsListProps) => {
 			ref={conversationsRootRef}
 		>
 			<ConversationsList className="webchat-prev-conversations-content">
-				{sessions.length > 0 &&
+				{sessions.length > 0 ? (
 					sessions.map((session, i) => {
 						return (
 							<ConversationsListItem
@@ -127,7 +152,19 @@ export const PrevConversationsList = (props: IPrevConversationsListProps) => {
 								config={config}
 							/>
 						);
-					})}
+					})
+				) : (
+					<EmptyState className="webchat-prev-conversations-empty">
+						<EmptyStateTitle>
+							{config.settings.homeScreen?.previousConversations?.emptyStateTitle ??
+								"No conversations yet"}
+						</EmptyStateTitle>
+						<EmptyStateMessage>
+							{config.settings.homeScreen?.previousConversations?.emptyStateMessage ??
+								"Start a new conversation to begin chatting"}
+						</EmptyStateMessage>
+					</EmptyState>
+				)}
 			</ConversationsList>
 			<ConversationsListActions className="webchat-prev-conversations-actions">
 				<StartButton
