@@ -34,6 +34,13 @@ let currentEndpoint: string = '';
 // Runtime sync URL (set during init, empty = syncing disabled)
 let currentSyncUrl: string = '';
 
+// Runtime CXone token (set during init, empty = no token)
+let currentCxoneToken: string = '';
+
+// Session tracking for token injection
+let lastSessionId: string = '';
+let tokenSentForSession: boolean = false;
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -387,6 +394,7 @@ const CXOneChat = {
     currentContext = context;
     currentUserId = userId || detectUserId();
     currentSyncUrl = syncUrl || '';
+    currentCxoneToken = cxoneToken || '';
 
     try {
       const endpointToken = extractEndpointToken(currentEndpoint);
@@ -473,12 +481,18 @@ const CXOneChat = {
         },
       });
 
+      // Initialize session tracking
+      const initialSessionId = webchatInstance?.store?.getState()?.options?.sessionId || '';
+      lastSessionId = initialSessionId;
+      tokenSentForSession = false;
+
       // Step 4: Send context to Cognigy
       const initialData: Record<string, unknown> = { _cxoneContext: { app: currentContext } };
-      if (cxoneToken) {
-        initialData.cxoneToken = cxoneToken;
+      if (currentCxoneToken) {
+        initialData.cxoneToken = currentCxoneToken;
       }
       webchatInstance.sendMessage('', initialData);
+      tokenSentForSession = true;
 
       // Step 5: Set up analytics service (single registration, fans out to all handlers)
       // Debounce sync to avoid too many requests during streaming
@@ -502,7 +516,11 @@ const CXOneChat = {
         }
 
         if (event.type === 'webchat/switch-session' && event.payload) {
-          createSession(currentUserId, String(event.payload));
+          const newSessionId = String(event.payload);
+          createSession(currentUserId, newSessionId);
+          // Reset tracking for new session - token needs to be sent with first message
+          lastSessionId = newSessionId;
+          tokenSentForSession = false;
         }
 
         // Fan out to all external handlers
@@ -521,7 +539,27 @@ const CXOneChat = {
         open: () => webchatInstance?.open(),
         close: () => webchatInstance?.close(),
         toggle: () => webchatInstance?.toggle(),
-        sendMessage: (text, data) => webchatInstance?.sendMessage(text, data),
+        sendMessage: (text, data) => {
+          const currentSessionId = webchatInstance?.store?.getState()?.options?.sessionId || '';
+          const isNewSession = currentSessionId !== lastSessionId || !tokenSentForSession;
+          
+          // If this is the first message in a new session, inject token and context
+          if (isNewSession) {
+            const enhancedData: Record<string, unknown> = {
+              ...data,
+              _cxoneContext: { app: currentContext },
+            };
+            // Only add token if it exists
+            if (currentCxoneToken) {
+              enhancedData.cxoneToken = currentCxoneToken;
+            }
+            webchatInstance?.sendMessage(text, enhancedData);
+            tokenSentForSession = true;
+            lastSessionId = currentSessionId;
+          } else {
+            webchatInstance?.sendMessage(text, data);
+          }
+        },
         getUserId: () => currentUserId,
         getSessionId: () => webchatInstance?.store?.getState()?.options?.sessionId || '',
         registerAnalyticsService: (handler) => {
